@@ -37,7 +37,7 @@ interface CatalogApi {
 @kotlinx.serialization.Serializable
 data class MerchantPage(
     val items: List<com.mes.core.domain.User>,
-    val total: Int
+    @kotlinx.serialization.SerialName("count") val total: Int
 )
 
 @kotlinx.serialization.Serializable
