@@ -20,12 +20,25 @@ interface CatalogApi {
     @GET("products/{id}/availability")
     suspend fun getProductAvailability(@Path("id") id: String): Envelope<AvailabilityResponse>
 
+    @GET("merchants")
+    suspend fun getMerchants(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 50,
+        @Query("search") search: String? = null
+    ): Envelope<MerchantPage>
+
     @GET("merchants/{id}")
     suspend fun getMerchant(@Path("id") id: String): Envelope<com.mes.core.domain.User>
 
     @GET("merchants/me/products")
     suspend fun getMyProducts(): Envelope<List<com.mes.core.domain.Product>>
 }
+
+@kotlinx.serialization.Serializable
+data class MerchantPage(
+    val items: List<com.mes.core.domain.User>,
+    val total: Int
+)
 
 @kotlinx.serialization.Serializable
 data class AvailabilityResponse(

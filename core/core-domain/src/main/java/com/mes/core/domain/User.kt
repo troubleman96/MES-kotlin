@@ -20,5 +20,6 @@ data class User(
     @SerialName("facility_name") val facilityName: String? = null,
     @SerialName("business_name") val businessName: String? = null,
     @SerialName("is_verified_merchant") val isVerifiedMerchant: Boolean = false,
-    @SerialName("created_at") val createdAt: String? = null
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("product_count") val productCount: Int = 0
 )

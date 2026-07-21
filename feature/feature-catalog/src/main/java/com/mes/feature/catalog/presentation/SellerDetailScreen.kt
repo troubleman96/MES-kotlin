@@ -138,26 +138,44 @@ private fun SellerHeader(merchant: com.mes.core.domain.User) {
                     fontWeight = FontWeight.Bold
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = MesColor.AccentAmber,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "4.8 (Verified)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MesColor.Ink600
-                    )
+                    if (merchant.isVerifiedMerchant) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = MesColor.AccentAmber,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Verified Supplier",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MesColor.Success
+                        )
+                    } else {
+                        Text(
+                            text = "Pending Verification",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MesColor.Warning
+                        )
+                    }
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        if (merchant.productCount > 0) {
+            Text(
+                text = "${merchant.productCount} equipment listed",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MesColor.PrimaryTeal,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Text(
-            text = merchant.facilityName ?: "Verified Medical Equipment Supplier",
+            text = merchant.businessName ?: "Verified Medical Equipment Supplier",
             style = MaterialTheme.typography.bodyMedium,
             color = MesColor.Ink600
         )

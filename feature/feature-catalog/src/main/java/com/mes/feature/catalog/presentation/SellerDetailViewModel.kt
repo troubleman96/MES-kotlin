@@ -33,26 +33,34 @@ class SellerDetailViewModel @Inject constructor(
     fun loadSeller(sellerId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            
-            // In a real app we might have a specific endpoint for merchant products
-            // For now we use the general search/filter if specific merchant-products isn't public
-            val merchantResult = safeApiCall { catalogApi.getMerchant(sellerId) }
-            val productsResult = safeApiCall { 
-                catalogApi.getProducts(category = null, search = null) // We would ideally filter by merchant ID here
-            }
 
-            if (merchantResult is ApiResult.Success) {
-                _uiState.update { 
-                    it.copy(
-                        merchant = merchantResult.data,
-                        products = if (productsResult is ApiResult.Success) {
-                            productsResult.data.items.filter { p -> p.merchant == sellerId || p.merchantName == merchantResult.data.businessName }
-                        } else emptyList(),
-                        isLoading = false
-                    )
+            val merchantResult = safeApiCall { catalogApi.getMerchant(sellerId) }
+
+            when (merchantResult) {
+                is ApiResult.Success -> {
+                    val merchant = merchantResult.data
+                    // Fetch all products and filter by this merchant's ID
+                    val productsResult = safeApiCall {
+                        catalogApi.getProducts(perPage = 100)
+                    }
+                    val merchantProducts = if (productsResult is ApiResult.Success) {
+                        productsResult.data.items.filter { it.merchant == sellerId }
+                    } else emptyList()
+
+                    _uiState.update {
+                        it.copy(
+                            merchant = merchant,
+                            products = merchantProducts,
+                            isLoading = false
+                        )
+                    }
                 }
-            } else if (merchantResult is ApiResult.Failure) {
-                _uiState.update { it.copy(isLoading = false, error = merchantResult.message) }
+                is ApiResult.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, error = merchantResult.message) }
+                }
+                is ApiResult.NetworkError -> {
+                    _uiState.update { it.copy(isLoading = false, error = "Network error") }
+                }
             }
         }
     }
