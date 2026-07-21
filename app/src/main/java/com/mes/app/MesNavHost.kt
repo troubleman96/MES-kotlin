@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mes.core.datastore.SessionDataStore
@@ -56,7 +58,7 @@ object Routes {
 @Composable
 fun MesNavHost() {
     val navController = rememberNavController()
-    var hasSeenOnboarding by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     
     val authViewModel: AuthViewModel = hiltViewModel()
     val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
@@ -64,6 +66,8 @@ fun MesNavHost() {
     var currentUserRole by remember { mutableStateOf<UserRole?>(null) }
     var isLoggedIn by remember { mutableStateOf(false) }
 
+    val hasSeenOnboarding by authViewModel.sessionDataStore.hasSeenOnboarding.collectAsStateWithLifecycle(initialValue = false)
+    
     LaunchedEffect(authUiState.isLoggedIn) {
         isLoggedIn = authUiState.isLoggedIn
     }
@@ -76,13 +80,16 @@ fun MesNavHost() {
         }
     }
     
-    val startDestination = if (hasSeenOnboarding) {
-        if (isLoggedIn) Routes.MAIN else {
-            // For buyers, we let them browse without login
-            if (currentUserRole == UserRole.BUYER) Routes.MAIN else Routes.LOGIN
+    // Determine start destination based on persisted state
+    val startDestination = remember(hasSeenOnboarding, isLoggedIn, currentUserRole) {
+        if (!hasSeenOnboarding) {
+            Routes.ONBOARDING
+        } else if (isLoggedIn) {
+            Routes.MAIN
+        } else {
+            // Guests go to MAIN (Catalog)
+            Routes.MAIN
         }
-    } else {
-        Routes.ONBOARDING
     }
 
     // We'll manage isLoggedIn state more carefully
@@ -92,15 +99,17 @@ fun MesNavHost() {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onFinished = { role ->
-                    hasSeenOnboarding = true
-                    currentUserRole = role
-                    if (role == UserRole.MERCHANT) {
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Routes.MAIN) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    scope.launch {
+                        authViewModel.sessionDataStore.setOnboardingComplete(role)
+                        currentUserRole = role
+                        if (role == UserRole.MERCHANT) {
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.ONBOARDING) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.MAIN) {
+                                popUpTo(Routes.ONBOARDING) { inclusive = true }
+                            }
                         }
                     }
                 }
@@ -223,10 +232,12 @@ fun MesNavHost() {
                 currentRole = currentUserRole ?: UserRole.BUYER,
                 onBackClick = { navController.popBackStack() },
                 onLogout = {
-                    hasSeenOnboarding = false
-                    currentUserRole = null
-                    navController.navigate(Routes.ONBOARDING) {
-                        popUpTo(0) { inclusive = true }
+                    scope.launch {
+                        authViewModel.sessionDataStore.clearSession()
+                        currentUserRole = null
+                        navController.navigate(Routes.ONBOARDING) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 },
                 onLoginClick = {

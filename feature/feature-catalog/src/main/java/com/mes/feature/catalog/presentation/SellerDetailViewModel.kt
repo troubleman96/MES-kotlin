@@ -39,12 +39,12 @@ class SellerDetailViewModel @Inject constructor(
             when (merchantResult) {
                 is ApiResult.Success -> {
                     val merchant = merchantResult.data
-                    // Fetch all products and filter by this merchant's ID
+                    
                     val productsResult = safeApiCall {
-                        catalogApi.getProducts(perPage = 100)
+                        catalogApi.getMerchantProducts(sellerId)
                     }
                     val merchantProducts = if (productsResult is ApiResult.Success) {
-                        productsResult.data.items.filter { it.merchant == sellerId }
+                        productsResult.data
                     } else emptyList()
 
                     _uiState.update {

@@ -33,6 +33,9 @@ interface CatalogApi {
 
     @GET("merchants/me/products/")
     suspend fun getMyProducts(): Envelope<List<com.mes.core.domain.Product>>
+
+    @GET("merchants/{id}/products/")
+    suspend fun getMerchantProducts(@Path("id") id: String): Envelope<List<com.mes.core.domain.Product>>
 }
 
 @kotlinx.serialization.Serializable
