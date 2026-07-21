@@ -119,12 +119,8 @@ fun MesNavHost() {
             ProductDetailScreen(
                 productId = productId,
                 onBackClick = { navController.popBackStack() },
-                onAddToCart = { 
-                    if (isLoggedIn) {
-                        navController.navigate(Routes.CART)
-                    } else {
-                        navController.navigate(Routes.LOGIN)
-                    }
+                onAddToCart = {
+                    navController.navigate(Routes.CART)
                 },
                 onMerchantClick = { sellerId: String ->
                     navController.navigate("seller/$sellerId")
