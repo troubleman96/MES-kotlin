@@ -7,23 +7,46 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mes.core.designsystem.theme.MesColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddListingScreen(
     onBackClick: () -> Unit,
-    onListingAdded: () -> Unit
+    onListingAdded: () -> Unit,
+    viewModel: AddListingViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
     var name by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("") }
+    var stock by remember { mutableStateOf("1") }
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onListingAdded()
+            viewModel.resetState()
+        }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.resetState()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Add New Listing") },
@@ -83,11 +106,24 @@ fun AddListingScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = onListingAdded,
+                onClick = {
+                    viewModel.addListing(
+                        name = name,
+                        category = category,
+                        priceTzs = price.toLongOrNull() ?: 0L,
+                        stock = stock.toIntOrNull() ?: 1,
+                        description = description
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MesColor.PrimaryTeal)
+                colors = ButtonDefaults.buttonColors(containerColor = MesColor.PrimaryTeal),
+                enabled = !uiState.isLoading && name.isNotBlank() && price.isNotBlank() && category.isNotBlank()
             ) {
-                Text("Save Listing")
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(color = MesColor.Surface0, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Save Listing")
+                }
             }
         }
     }

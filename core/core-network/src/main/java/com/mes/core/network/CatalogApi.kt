@@ -2,9 +2,7 @@ package com.mes.core.network
 
 import com.mes.core.network.envelope.Envelope
 import kotlinx.serialization.SerialName
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface CatalogApi {
     @GET("products/")
@@ -36,7 +34,20 @@ interface CatalogApi {
 
     @GET("merchants/{id}/products/")
     suspend fun getMerchantProducts(@Path("id") id: String): Envelope<List<com.mes.core.domain.Product>>
+
+    @POST("products/")
+    suspend fun createProduct(@Body request: CreateProductRequest): Envelope<com.mes.core.domain.Product>
 }
+
+@kotlinx.serialization.Serializable
+data class CreateProductRequest(
+    val name: String,
+    val description: String,
+    @SerialName("daily_rate_tzs") val dailyRateTzs: Long,
+    val category: String,
+    val stock: Int = 1,
+    val specs: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap()
+)
 
 @kotlinx.serialization.Serializable
 data class MerchantPage(
