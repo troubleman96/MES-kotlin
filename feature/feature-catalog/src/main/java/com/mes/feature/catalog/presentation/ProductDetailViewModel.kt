@@ -21,6 +21,7 @@ import javax.inject.Inject
 data class ProductDetailUiState(
     val product: Product? = null,
     val isLoading: Boolean = false,
+    val isAddingToCart: Boolean = false,
     val addToCartSuccess: Boolean = false,
     val error: String? = null
 )
@@ -54,7 +55,7 @@ class ProductDetailViewModel @Inject constructor(
     fun addToCart(quantity: Int, rentalStart: String, rentalEnd: String) {
         val product = uiState.value.product ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isAddingToCart = true) }
             
             // Get current cart
             val currentCartResult = safeApiCall { cartApi.getCart() }
@@ -93,13 +94,13 @@ class ProductDetailViewModel @Inject constructor(
             // Sync cart
             when (val result = safeApiCall { cartApi.syncCart(CartSyncRequest(lines)) }) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, addToCartSuccess = true) }
+                    _uiState.update { it.copy(isAddingToCart = false, addToCartSuccess = true) }
                 }
                 is ApiResult.Failure -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiState.update { it.copy(isAddingToCart = false, error = result.message) }
                 }
                 is ApiResult.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, error = "Network error") }
+                    _uiState.update { it.copy(isAddingToCart = false, error = "Network error") }
                 }
             }
         }

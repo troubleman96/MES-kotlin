@@ -39,8 +39,10 @@ import com.mes.feature.catalog.presentation.ProductDetailViewModel
 fun ProductDetailScreen(
     productId: String,
     onBackClick: () -> Unit,
-    onAddToCart: (Int, String, String) -> Unit,
+    onAddToCart: (Int, String, String) -> Boolean,
     onNavigateToCart: () -> Unit,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
     onMerchantClick: (String) -> Unit,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
@@ -74,17 +76,11 @@ fun ProductDetailScreen(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(uiState.addToCartSuccess) {
-        if (uiState.addToCartSuccess) {
-            viewModel.resetAddToCart()
-        }
-    }
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError() // I need to add this to ViewModel too
+            viewModel.clearError()
         }
     }
 
@@ -112,7 +108,7 @@ fun ProductDetailScreen(
                 Button(
                     onClick = {
                         showAuthPrompt = false
-                        // In a real app, navigate to Login
+                        onLoginClick()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MesColor.PrimaryTeal)
                 ) {
@@ -120,14 +116,20 @@ fun ProductDetailScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAuthPrompt = false }) {
-                    Text("Cancel")
+                TextButton(
+                    onClick = {
+                        showAuthPrompt = false
+                        onRegisterClick()
+                    }
+                ) {
+                    Text("Register")
                 }
             }
         )
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(product.name) },
@@ -166,19 +168,33 @@ fun ProductDetailScreen(
                     }
 
                     Button(
-                        onClick = { onAddToCart(quantity, startDate.toString(), endDate.toString()) },
+                        onClick = { 
+                            val handled = onAddToCart(quantity, startDate.toString(), endDate.toString())
+                            if (!handled) {
+                                showAuthPrompt = true
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MesColor.AccentAmber
                         ),
-                        modifier = Modifier.height(48.dp)
+                        modifier = Modifier.height(48.dp),
+                        enabled = !uiState.isAddingToCart
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (uiState.isAddingToCart) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MesColor.Surface0,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.ShoppingCart,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add to Cart")
+                        Text(if (uiState.isAddingToCart) "Adding..." else "Add to Cart")
                     }
                 }
             }

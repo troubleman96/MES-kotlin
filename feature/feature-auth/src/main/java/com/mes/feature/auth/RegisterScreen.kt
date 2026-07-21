@@ -213,7 +213,8 @@ fun RegisterScreen(
                         firstName = firstName,
                         lastName = lastName,
                         role = role,
-                        businessName = businessName.ifBlank { null }
+                        businessName = if (role == UserRole.MERCHANT) businessName.ifBlank { null } else null,
+                        facilityName = if (role == UserRole.BUYER) businessName.ifBlank { null } else null
                     )
                 },
                 modifier = Modifier

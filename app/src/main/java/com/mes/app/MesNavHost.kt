@@ -151,12 +151,19 @@ fun MesNavHost() {
                 onAddToCart = { quantity, start, end ->
                     if (isLoggedIn) {
                         productDetailViewModel.addToCart(quantity, start, end)
+                        true
                     } else {
-                        navController.navigate(Routes.LOGIN)
+                        false
                     }
                 },
                 onNavigateToCart = {
                     navController.navigate(Routes.CART)
+                },
+                onLoginClick = {
+                    navController.navigate(Routes.LOGIN)
+                },
+                onRegisterClick = {
+                    navController.navigate(Routes.REGISTER)
                 },
                 onMerchantClick = { sellerId: String ->
                     navController.navigate("seller/$sellerId")
