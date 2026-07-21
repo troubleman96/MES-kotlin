@@ -61,6 +61,8 @@ import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.Product
 import com.mes.core.domain.ProductCategory
 
+import androidx.compose.material.icons.filled.Storefront
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogScreen(
@@ -68,6 +70,7 @@ fun CatalogScreen(
     onCartClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onSellerClick: () -> Unit = {},
     viewModel: CatalogViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -85,6 +88,13 @@ fun CatalogScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = onSellerClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Storefront,
+                            contentDescription = "Sellers",
+                            tint = MesColor.PrimaryTeal
+                        )
+                    }
                     IconButton(onClick = onNotificationsClick) {
                         Icon(
                             imageVector = Icons.Filled.Notifications,
@@ -95,12 +105,6 @@ fun CatalogScreen(
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
                             contentDescription = "Cart"
-                        )
-                    }
-                    IconButton(onClick = onProfileClick) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = "Profile"
                         )
                     }
                 },

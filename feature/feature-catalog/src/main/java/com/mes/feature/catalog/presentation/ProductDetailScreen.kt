@@ -79,6 +79,32 @@ fun ProductDetailScreen(
     var quantity by remember { mutableIntStateOf(1) }
     val pagerState = rememberPagerState(pageCount = { product.images.size })
 
+    var showAuthPrompt by remember { mutableStateOf(false) }
+
+    if (showAuthPrompt) {
+        AlertDialog(
+            onDismissRequest = { showAuthPrompt = false },
+            title = { Text("Sign in Required") },
+            text = { Text("Please sign in or create an account to add items to your cart and proceed with rentals.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAuthPrompt = false
+                        // In a real app, navigate to Login
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MesColor.PrimaryTeal)
+                ) {
+                    Text("Sign In")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAuthPrompt = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,7 +144,10 @@ fun ProductDetailScreen(
                     }
 
                     Button(
-                        onClick = onAddToCart,
+                        onClick = {
+                            // Check if logged in - for now show prompt
+                            showAuthPrompt = true
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MesColor.AccentAmber
                         ),

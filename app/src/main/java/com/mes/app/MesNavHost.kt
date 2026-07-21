@@ -30,6 +30,7 @@ object Routes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val MAIN = "main"
     const val CATALOG = "catalog"
     const val PRODUCT_DETAIL = "product/{productId}"
     const val CART = "cart"
@@ -50,13 +51,10 @@ fun MesNavHost() {
     val navController = rememberNavController()
     var hasSeenOnboarding by remember { mutableStateOf(false) }
     var currentUserRole by remember { mutableStateOf<UserRole?>(null) }
+    var isLoggedIn by remember { mutableStateOf(false) } // This should ideally come from a ViewModel
 
-    val startDestination = if (hasSeenOnboarding && currentUserRole != null) {
-        when (currentUserRole) {
-            UserRole.BUYER -> Routes.CATALOG
-            UserRole.MERCHANT -> Routes.MERCHANT_DASHBOARD
-            null -> Routes.ONBOARDING
-        }
+    val startDestination = if (hasSeenOnboarding) {
+        Routes.MAIN
     } else {
         Routes.ONBOARDING
     }
@@ -67,30 +65,25 @@ fun MesNavHost() {
                 onFinished = { role ->
                     hasSeenOnboarding = true
                     currentUserRole = role
-                    when (role) {
-                        UserRole.BUYER -> navController.navigate(Routes.CATALOG) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
-                        }
-                        UserRole.MERCHANT -> navController.navigate(Routes.MERCHANT_DASHBOARD) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
-                        }
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Routes.MAIN) {
+            MainScreen(
+                rootNavController = navController,
+                currentUserRole = currentUserRole
             )
         }
 
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
-                    when (currentUserRole) {
-                        UserRole.BUYER -> navController.navigate(Routes.CATALOG) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                        UserRole.MERCHANT -> navController.navigate(Routes.MERCHANT_DASHBOARD) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                        else -> navController.navigate(Routes.CATALOG)
-                    }
+                    isLoggedIn = true
+                    navController.popBackStack()
                 },
                 onRegisterClick = { navController.navigate(Routes.REGISTER) }
             )

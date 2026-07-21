@@ -19,8 +19,16 @@ The app uses a `.env` file in the root directory to manage environment-specific 
 ### 2. Building the project
 Run a Gradle sync in Android Studio. The `core-network` module will automatically read the `.env` file and generate a `BuildConfig.API_BASE_URL` constant.
 
-## Architecture
-The project follows Clean Architecture principles with a modular structure:
+## Key Features
+- **Onboarding**: Multi-lingual (English/Kiswahili) with visual medical equipment background.
+- **Marketplace Browser**: Seamless browsing of medical equipment with bottom navigation.
+- **Bottom Navigation**: 
+    - **Home**: Equipment catalog and featured items.
+    - **Sellers**: Verified medical equipment suppliers.
+    - **Cart**: Manage rental selections.
+    - **Profile**: Account management and order history.
+- **Smart Checkout**: Mobile money integration (M-Pesa, etc.) with real-time USSD tracking.
+- **Verified Sellers**: Browse and interact with verified medical equipment merchants.
 - **`app`**: The main entry point and navigation host.
 - **`core-*`**: Shared modules for networking, database, design system, etc.
 - **`feature-*`**: Domain-specific feature modules (Auth, Catalog, Cart, Merchant, etc.).

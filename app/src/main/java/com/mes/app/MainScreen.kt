@@ -25,6 +25,9 @@ import com.mes.feature.catalog.CatalogScreen
 import com.mes.feature.catalog.presentation.SellersScreen
 import com.mes.feature.profile.ProfileScreen
 
+import androidx.compose.ui.unit.dp
+import com.mes.app.Routes
+
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem(Routes.CATALOG, Icons.Filled.Home, "Home")
     object Sellers : BottomNavItem("sellers_tab", Icons.Filled.Storefront, "Sellers")
@@ -95,6 +98,9 @@ fun MainScreen(
                     },
                     onProfileClick = {
                         navController.navigate(BottomNavItem.Profile.route)
+                    },
+                    onSellerClick = {
+                        navController.navigate(BottomNavItem.Sellers.route)
                     }
                 )
             }
