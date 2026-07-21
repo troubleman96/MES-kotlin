@@ -3,7 +3,6 @@ package com.mes.feature.cart
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mes.core.domain.Cart
-import com.mes.core.domain.CartLine
 import com.mes.core.domain.RentalPeriod
 import com.mes.core.testing.TestData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,7 +51,10 @@ class CartViewModel @Inject constructor() : ViewModel() {
     fun updateRentalPeriod(lineId: String, period: RentalPeriod) {
         viewModelScope.launch {
             val currentLines = _uiState.value.cart.lines.map { line ->
-                if (line.id == lineId) line.copy(rentalPeriod = period) else line
+                if (line.id == lineId) line.copy(
+                    rentalStart = period.startDate.toString(),
+                    rentalEnd = period.endDate.toString()
+                ) else line
             }
             _uiState.update { it.copy(cart = Cart(lines = currentLines)) }
         }

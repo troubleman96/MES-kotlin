@@ -242,7 +242,7 @@ private fun ProductCard(
     ) {
         Column {
             AsyncImage(
-                model = product.imageUrls.firstOrNull(),
+                model = product.images.firstOrNull()?.url,
                 contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -280,8 +280,8 @@ private fun ProductCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 AvailabilityChip(
-                    isAvailable = product.isAvailable,
-                    availableFrom = product.availableFrom?.toString()
+                    isAvailable = product.isActive,
+                    availableFrom = null
                 )
             }
         }
@@ -304,7 +304,7 @@ private fun FeaturedProductCard(
     ) {
         Column {
             AsyncImage(
-                model = product.imageUrls.firstOrNull(),
+                model = product.images.firstOrNull()?.url,
                 contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()

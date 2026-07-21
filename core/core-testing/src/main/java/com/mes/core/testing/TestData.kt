@@ -4,10 +4,10 @@ import com.mes.core.domain.Cart
 import com.mes.core.domain.CartLine
 import com.mes.core.domain.Product
 import com.mes.core.domain.ProductCategory
+import com.mes.core.domain.ProductImage
 import com.mes.core.domain.RentalPeriod
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
@@ -25,13 +25,10 @@ object TestData {
         name = name,
         description = "Professional-grade portable ventilator for ICU and emergency use",
         category = category,
-        merchantId = UUID.randomUUID().toString(),
         merchantName = merchantName,
         merchantIsVerified = true,
         dailyRateTzs = dailyRate,
-        weeklyRateTzs = dailyRate * 6,
-        monthlyRateTzs = dailyRate * 25,
-        imageUrls = listOf("https://via.placeholder.com/400"),
+        images = listOf(ProductImage(UUID.randomUUID().toString(), "https://via.placeholder.com/400")),
         specs = mapOf(
             "Model" to "VentPro 3000",
             "Manufacturer" to "MedTech Corp",
@@ -39,7 +36,7 @@ object TestData {
             "Power" to "AC 100-240V"
         ),
         isFeatured = true,
-        isAvailable = true
+        isActive = true
     )
 
     fun testRentalPeriod(): RentalPeriod {
@@ -58,14 +55,13 @@ object TestData {
         return CartLine(
             id = UUID.randomUUID().toString(),
             productId = productId,
-            merchantId = UUID.randomUUID().toString(),
-            merchantName = "MedTech Supplies",
-            productName = "Portable Ventilator",
-            thumbnailUrl = "https://via.placeholder.com/100",
-            dailyRateTzs = dailyRate,
-            rentalPeriod = period,
+            rentalStart = period.startDate.toString(),
+            rentalEnd = period.endDate.toString(),
             quantity = 1,
-            addedAt = Clock.System.now()
+            addedAt = Clock.System.now().toString(),
+            productName = "Portable Ventilator",
+            dailyRateTzs = dailyRate,
+            merchantName = "MedTech Supplies"
         )
     }
 

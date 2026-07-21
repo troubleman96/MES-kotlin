@@ -316,7 +316,7 @@ private fun AddressStep(
             AddressCard(
                 address = address,
                 isSelected = address.id == selectedAddressId,
-                onSelect = { onSelectAddress(address.id) }
+                onSelect = { onSelectAddress(address.id ?: "") }
             )
         }
     }
@@ -395,7 +395,7 @@ private fun CartLineItem(line: CartLine) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "${line.rentalPeriod.numberOfDays} days",
+                text = "${line.numberOfDays} days",
                 style = MaterialTheme.typography.bodySmall,
                 color = MesColor.Ink400
             )

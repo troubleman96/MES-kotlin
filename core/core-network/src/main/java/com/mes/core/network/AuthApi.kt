@@ -1,58 +1,60 @@
 package com.mes.core.network
 
 import com.mes.core.network.envelope.Envelope
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-import retrofit2.http.Query
 
 interface AuthApi {
-    @POST("api/v1/auth/register")
+    @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Envelope<AuthResponse>
 
-    @POST("api/v1/auth/login")
+    @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Envelope<AuthResponse>
 
-    @POST("api/v1/auth/verify-otp")
-    suspend fun verifyOtp(@Body request: OtpRequest): Envelope<AuthResponse>
+    @POST("auth/verify-phone")
+    suspend fun verifyPhone(@Body request: OtpRequest): Envelope<AuthResponse>
 
-    @POST("api/v1/auth/resend-otp")
-    suspend fun resendOtp(@Body request: ResendOtpRequest): Envelope<Unit>
+    @POST("auth/send-phone-otp")
+    suspend fun sendPhoneOtp(): Envelope<Unit>
 
-    @GET("api/v1/auth/me")
+    @GET("auth/me")
     suspend fun getProfile(): Envelope<com.mes.core.domain.User>
 }
 
+@Serializable
 data class RegisterRequest(
     val email: String,
     val phone: String,
     val password: String,
-    val firstName: String,
-    val lastName: String,
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
     val role: String,
-    val businessName: String? = null,
-    val businessRegistrationNumber: String? = null
+    @SerialName("business_name") val businessName: String? = null,
+    @SerialName("facility_name") val facilityName: String? = null
 )
 
+@Serializable
 data class LoginRequest(
     val email: String,
     val password: String
 )
 
+@Serializable
 data class OtpRequest(
     val phone: String,
     val otp: String
 )
 
-data class ResendOtpRequest(
-    val phone: String
-)
-
+@Serializable
 data class AuthResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val user: com.mes.core.domain.User,
-    val requiresOtpVerification: Boolean = false
+    @SerialName("id") val userId: String? = null,
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("refresh_token") val refreshToken: String,
+    @SerialName("expires_in") val expiresIn: Int,
+    @SerialName("role") val role: String,
+    @SerialName("phone_verified") val phoneVerified: Boolean,
+    @SerialName("profile_complete") val profileComplete: Boolean
 )

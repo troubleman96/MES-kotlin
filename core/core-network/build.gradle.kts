@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -12,6 +15,18 @@ android {
 
     defaultConfig {
         minSdk = 26
+
+        val properties = Properties()
+        val envFile = project.rootProject.file(".env")
+        if (envFile.exists()) {
+            properties.load(FileInputStream(envFile))
+        }
+        val apiBaseUrl = properties.getProperty("API_BASE_URL") ?: "https://api.mes.co.tz/api/v1/"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

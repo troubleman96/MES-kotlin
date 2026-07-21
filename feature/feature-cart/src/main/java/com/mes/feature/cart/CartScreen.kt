@@ -200,7 +200,7 @@ private fun CartLineItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${line.rentalPeriod.numberOfDays} days × TZS ${"%,d".format(line.dailyRateTzs)}",
+                    text = "${line.numberOfDays} days × TZS ${"%,d".format(line.dailyRateTzs)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MesColor.Ink400
                 )

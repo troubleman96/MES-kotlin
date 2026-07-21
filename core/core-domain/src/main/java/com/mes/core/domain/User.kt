@@ -1,23 +1,24 @@
 package com.mes.core.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class UserRole {
-    BUYER,
-    MERCHANT
+    @SerialName("buyer") BUYER,
+    @SerialName("merchant") MERCHANT
 }
 
 @Serializable
 data class User(
     val id: String,
     val email: String,
-    val phone: String,
-    val firstName: String,
-    val lastName: String,
+    val phone: String? = null,
+    @SerialName("phone_verified") val phoneVerified: Boolean = false,
     val role: UserRole,
-    val isPhoneVerified: Boolean = false,
-    val isEmailVerified: Boolean = false,
-    val preferredLanguage: String = "en",
-    val businessName: String? = null,
-    val businessRegistrationNumber: String? = null
+    @SerialName("first_name") val firstName: String,
+    @SerialName("last_name") val lastName: String,
+    @SerialName("facility_name") val facilityName: String? = null,
+    @SerialName("business_name") val businessName: String? = null,
+    @SerialName("is_verified_merchant") val isVerifiedMerchant: Boolean = false,
+    @SerialName("created_at") val createdAt: String? = null
 )

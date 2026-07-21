@@ -2,21 +2,8 @@ package com.mes.feature.catalog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,30 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,13 +25,8 @@ import coil.compose.AsyncImage
 import com.mes.core.designsystem.component.MerchantTrustCard
 import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.Product
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
+import com.mes.core.domain.ProductImage
+import kotlinx.datetime.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,16 +43,13 @@ fun ProductDetailScreen(
             name = "Portable Ventilator Pro 3000",
             description = "Professional-grade portable ventilator for ICU and emergency use. Features advanced tidal volume control, multiple ventilation modes, and long battery life. Suitable for adult and pediatric patients.",
             category = com.mes.core.domain.ProductCategory.LIFE_SUPPORT,
-            merchantId = "merchant-1",
             merchantName = "MedTech Supplies Ltd",
             merchantIsVerified = true,
             dailyRateTzs = 50000,
-            weeklyRateTzs = 280000,
-            monthlyRateTzs = 1000000,
-            imageUrls = listOf(
-                "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+1",
-                "https://via.placeholder.com/600x400/5FBFBE/FFFFFF?text=Ventilator+2",
-                "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+3"
+            images = listOf(
+                ProductImage("1", "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+1"),
+                ProductImage("2", "https://via.placeholder.com/600x400/5FBFBE/FFFFFF?text=Ventilator+2"),
+                ProductImage("3", "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+3")
             ),
             specs = mapOf(
                 "Model" to "VentPro 3000",
@@ -100,7 +62,7 @@ fun ProductDetailScreen(
                 "Display" to "10.1\" color touchscreen"
             ),
             isFeatured = true,
-            isAvailable = true
+            isActive = true
         )
     }
 
@@ -108,14 +70,14 @@ fun ProductDetailScreen(
     var startDate by remember { mutableStateOf(today) }
     var endDate by remember { mutableStateOf(today.plus(7, DateTimeUnit.DAY)) }
     val numberOfDays = remember(startDate, endDate) {
-        maxOf(1, (endDate.year * 365 + endDate.dayOfYear) - (startDate.year * 365 + startDate.dayOfYear))
+        maxOf(1, (endDate.toEpochDays() - startDate.toEpochDays()))
     }
     val totalCost = remember(numberOfDays, product) {
-        product.dailyRateTzs.toLong() * numberOfDays
+        product.dailyRateTzs * numberOfDays
     }
 
     var quantity by remember { mutableIntStateOf(1) }
-    val pagerState = rememberPagerState(pageCount = { product.imageUrls.size })
+    val pagerState = rememberPagerState(pageCount = { product.images.size })
 
     Scaffold(
         topBar = {
@@ -188,7 +150,7 @@ fun ProductDetailScreen(
                         .aspectRatio(3f / 2f)
                 ) { page ->
                     AsyncImage(
-                        model = product.imageUrls[page],
+                        model = product.images[page].url,
                         contentDescription = "${product.name} - Image ${page + 1}",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -202,7 +164,7 @@ fun ProductDetailScreen(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    repeat(product.imageUrls.size) { index ->
+                    repeat(product.images.size) { index ->
                         Box(
                             modifier = Modifier
                                 .padding(horizontal = 4.dp)
@@ -395,5 +357,3 @@ private fun DateCard(
         }
     }
 }
-
-

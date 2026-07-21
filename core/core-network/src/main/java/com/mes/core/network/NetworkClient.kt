@@ -29,12 +29,15 @@ class NetworkClient @Inject constructor(
 
     private val authInterceptor = Interceptor { chain ->
         val token = runBlocking { sessionDataStore.accessToken.first() }
+        val requestBuilder = chain.request().newBuilder()
+            .addHeader("ngrok-skip-browser-warning", "true")
+        
         val request = if (!token.isNullOrBlank()) {
-            chain.request().newBuilder()
+            requestBuilder
                 .addHeader("Authorization", "Bearer $token")
                 .build()
         } else {
-            chain.request()
+            requestBuilder.build()
         }
         chain.proceed(request)
     }
@@ -52,7 +55,7 @@ class NetworkClient @Inject constructor(
         .build()
 
     private fun createRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(BuildConfig.API_BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory(contentType))
         .build()
@@ -65,8 +68,4 @@ class NetworkClient @Inject constructor(
     val ordersApi: OrdersApi by lazy { retrofit.create(OrdersApi::class.java) }
     val addressApi: AddressApi by lazy { retrofit.create(AddressApi::class.java) }
     val notificationApi: NotificationApi by lazy { retrofit.create(NotificationApi::class.java) }
-
-    companion object {
-        const val BASE_URL = "https://api.mes.co.tz/"
-    }
 }

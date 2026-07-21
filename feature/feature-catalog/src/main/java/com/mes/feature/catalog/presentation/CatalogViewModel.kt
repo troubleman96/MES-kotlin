@@ -40,7 +40,6 @@ class CatalogViewModel @Inject constructor(
 
     init {
         loadProducts()
-        loadFeaturedProducts()
     }
 
     fun loadProducts() {
@@ -49,16 +48,18 @@ class CatalogViewModel @Inject constructor(
             when (val result = safeApiCall {
                 catalogApi.getProducts(
                     page = _uiState.value.currentPage,
-                    category = _uiState.value.selectedCategory?.name,
+                    category = _uiState.value.selectedCategory?.name?.lowercase(),
                     search = _uiState.value.searchQuery.ifBlank { null }
                 )
             }) {
                 is ApiResult.Success -> {
+                    val products = result.data.items
                     _uiState.update {
                         it.copy(
-                            products = result.data.items,
+                            products = products,
+                            featuredProducts = products.filter { p -> p.isFeatured },
                             isLoading = false,
-                            hasMorePages = result.data.page < result.data.totalPages
+                            hasMorePages = products.size >= 20 // Simple check
                         )
                     }
                 }
@@ -70,17 +71,6 @@ class CatalogViewModel @Inject constructor(
                         it.copy(isLoading = false, error = "Network error")
                     }
                 }
-            }
-        }
-    }
-
-    fun loadFeaturedProducts() {
-        viewModelScope.launch {
-            when (val result = safeApiCall { catalogApi.getFeaturedProducts() }) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(featuredProducts = result.data) }
-                }
-                else -> { /* silent fail for featured */ }
             }
         }
     }
@@ -105,7 +95,6 @@ class CatalogViewModel @Inject constructor(
     fun refresh() {
         _uiState.update { it.copy(isRefreshing = true, currentPage = 1) }
         loadProducts()
-        loadFeaturedProducts()
         _uiState.update { it.copy(isRefreshing = false) }
     }
 

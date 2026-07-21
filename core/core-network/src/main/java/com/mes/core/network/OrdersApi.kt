@@ -1,51 +1,73 @@
 package com.mes.core.network
 
 import com.mes.core.domain.Order
-import com.mes.core.domain.SubOrder
 import com.mes.core.network.envelope.Envelope
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.Query
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import retrofit2.http.*
 
 interface OrdersApi {
-    @GET("api/v1/orders/")
+    @POST("checkout")
+    suspend fun checkout(@Body request: CheckoutRequest): Envelope<CheckoutResponse>
+
+    @GET("orders")
     suspend fun getOrders(
-        @Query("page") page: Int = 1,
         @Query("status") status: String? = null
     ): Envelope<List<Order>>
 
-    @GET("api/v1/orders/{orderId}")
-    suspend fun getOrder(@Path("orderId") orderId: String): Envelope<Order>
+    @GET("orders/{id}")
+    suspend fun getOrder(@Path("id") id: String): Envelope<Order>
 
-    @POST("api/v1/orders/checkout")
-    suspend fun checkout(@Body request: CheckoutRequest): Envelope<List<SubOrder>>
+    @PATCH("orders/{id}/status")
+    suspend fun updateOrderStatus(
+        @Path("id") id: String,
+        @Body request: StatusUpdateRequest
+    ): Envelope<Order>
 
-    @GET("api/v1/orders/{subOrderId}/payment-status")
-    suspend fun getPaymentStatus(@Path("subOrderId") subOrderId: String): Envelope<PaymentStatusResponse>
+    @POST("orders/{id}/pay")
+    suspend fun initiatePayment(@Path("id") id: String): Envelope<PaymentIntentResponse>
 
-    @POST("api/v1/orders/{subOrderId}/pay")
-    suspend fun initiatePayment(@Path("subOrderId") subOrderId: String): Envelope<PaymentIntentResponse>
+    @GET("orders/{id}/payment-status")
+    suspend fun getPaymentStatus(@Path("id") id: String): Envelope<PaymentStatusResponse>
 }
 
+@Serializable
 data class CheckoutRequest(
-    val cartId: String,
-    val deliveryAddressId: String,
-    val billingAddressId: String? = null,
-    val paymentMethod: String,
-    val specialInstructions: Map<String, String>? = null
+    @SerialName("delivery_address_id") val deliveryAddressId: String,
+    @SerialName("billing_address_id") val billingAddressId: String,
+    val notes: String? = null
 )
 
+@Serializable
+data class CheckoutResponse(
+    @SerialName("order_group_id") val orderGroupId: String,
+    @SerialName("sub_orders") val subOrders: List<SubOrderMinimal>
+)
+
+@Serializable
+data class SubOrderMinimal(
+    val id: String,
+    @SerialName("merchant_name") val merchantName: String,
+    @SerialName("subtotal_tzs") val subtotalTzs: Long,
+    val status: String
+)
+
+@Serializable
+data class StatusUpdateRequest(
+    val status: String
+)
+
+@Serializable
 data class PaymentIntentResponse(
-    val reference: String,
+    val id: String? = null,
+    @SerialName("snippe_reference") val snippeReference: String,
     val status: String,
-    val expiresAt: String,
-    val network: String? = null
+    @SerialName("amount_tzs") val amountTzs: Long,
+    @SerialName("expires_at") val expiresAt: String
 )
 
+@Serializable
 data class PaymentStatusResponse(
-    val reference: String,
     val status: String,
-    val failureReason: String? = null
+    @SerialName("failure_reason") val failureReason: String? = null
 )

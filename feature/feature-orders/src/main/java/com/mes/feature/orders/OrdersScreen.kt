@@ -1,44 +1,18 @@
 package com.mes.feature.orders
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,8 +38,7 @@ fun OrdersScreen(
             0 -> uiState.orders.filter {
                 it.status in listOf(
                     OrderStatus.CONFIRMED, OrderStatus.DISPATCHED,
-                    OrderStatus.IN_TRANSIT, OrderStatus.DELIVERED,
-                    OrderStatus.IN_USE, OrderStatus.RETURN_DUE
+                    OrderStatus.DELIVERED, OrderStatus.RETURN_DUE
                 )
             }
             1 -> uiState.orders.filter {
@@ -140,7 +113,7 @@ fun OrdersScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
+                    contentPadding = PaddingValues(16.dp)
                 ) {
                     items(filteredOrders) { order ->
                         OrderCard(
@@ -159,7 +132,6 @@ private fun OrderCard(
     order: Order,
     onClick: () -> Unit
 ) {
-    val firstSubOrder = order.subOrders.firstOrNull()
     val statusColor = when (order.status) {
         OrderStatus.CONFIRMED -> MesColor.PrimaryTeal
         OrderStatus.DISPATCHED -> MesColor.Warning
@@ -191,29 +163,27 @@ private fun OrderCard(
                     color = MesColor.Ink400
                 )
                 StatusChip(
-                    status = order.status.displayName,
+                    status = order.status.name.lowercase().capitalize(),
                     statusColor = statusColor
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            firstSubOrder?.let { subOrder ->
+            Text(
+                text = order.merchantName ?: "Unknown Merchant",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            order.lines.forEach { line ->
                 Text(
-                    text = subOrder.merchantName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    text = "${line.productName} × ${line.quantity}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MesColor.Ink600
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                subOrder.items.forEach { item ->
-                    Text(
-                        text = "${item.productName} × ${item.quantity}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MesColor.Ink600
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -228,7 +198,7 @@ private fun OrderCard(
                     color = MesColor.Ink400
                 )
                 Text(
-                    text = "TZS ${"%,d".format(firstSubOrder?.totalTzs ?: 0)}",
+                    text = "TZS ${"%,d".format(order.subtotalTzs)}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MesColor.PrimaryTeal,
                     fontWeight = FontWeight.Bold

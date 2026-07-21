@@ -40,7 +40,7 @@ class AuthViewModel @Inject constructor(
         lastName: String,
         role: UserRole,
         businessName: String? = null,
-        businessRegNumber: String? = null
+        facilityName: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
@@ -52,9 +52,9 @@ class AuthViewModel @Inject constructor(
                         password = password,
                         firstName = firstName,
                         lastName = lastName,
-                        role = role.name,
+                        role = role.name.lowercase(),
                         businessName = businessName,
-                        businessRegistrationNumber = businessRegNumber
+                        facilityName = facilityName
                     )
                 )
             }) {
@@ -88,17 +88,18 @@ class AuthViewModel @Inject constructor(
             }) {
                 is ApiResult.Success -> {
                     val response = result.data
-                    if (response.requiresOtpVerification) {
+                    if (!response.phoneVerified) {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             requiresOtp = true
                         )
                     } else {
+                        val role = if (response.role.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
                         sessionDataStore.saveSession(
                             accessToken = response.accessToken,
                             refreshToken = response.refreshToken,
-                            userId = response.user.id,
-                            role = response.user.role
+                            userId = response.userId ?: "",
+                            role = role
                         )
                         _uiState.value = _uiState.value.copy(isLoading = false)
                     }
@@ -123,17 +124,18 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             when (val result = safeApiCall {
-                authApi.verifyOtp(
+                authApi.verifyPhone(
                     com.mes.core.network.OtpRequest(phone = phone, otp = otp)
                 )
             }) {
                 is ApiResult.Success -> {
                     val response = result.data
+                    val role = if (response.role.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
                     sessionDataStore.saveSession(
                         accessToken = response.accessToken,
                         refreshToken = response.refreshToken,
-                        userId = response.user.id,
-                        role = response.user.role
+                        userId = response.userId ?: "",
+                        role = role
                     )
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }

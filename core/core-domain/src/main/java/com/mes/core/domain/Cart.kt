@@ -1,26 +1,36 @@
 package com.mes.core.domain
 
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class CartLine(
     val id: String,
-    val productId: String,
-    val merchantId: String,
-    val merchantName: String,
-    val productName: String,
-    val thumbnailUrl: String,
-    val dailyRateTzs: Long,
-    val rentalPeriod: RentalPeriod,
+    @SerialName("product") val productId: String,
+    @SerialName("rental_start") val rentalStart: String,
+    @SerialName("rental_end") val rentalEnd: String,
     val quantity: Int = 1,
-    val addedAt: Instant
+    @SerialName("added_at") val addedAt: String,
+    // Transient fields for UI, not from API
+    @Transient val productName: String = "",
+    @Transient val dailyRateTzs: Long = 0,
+    @Transient val merchantName: String = "",
+    @Transient val merchantId: String = "",
+    @Transient val thumbnailUrl: String = ""
 ) {
-    val lineTotalTzs: Long
-        get() = rentalPeriod.totalCost(dailyRateTzs) * quantity
+    val numberOfDays: Int
+        get() = try {
+            val start = LocalDate.parse(rentalStart)
+            val end = LocalDate.parse(rentalEnd)
+            maxOf(1, end.toEpochDays() - start.toEpochDays())
+        } catch (e: Exception) {
+            1
+        }
 
-    val merchantSubtotalTzs: Long
-        get() = lineTotalTzs
+    val lineTotalTzs: Long
+        get() = dailyRateTzs * quantity * numberOfDays
 }
 
 @Serializable
