@@ -26,7 +26,8 @@ data class AuthUiState(
     val error: String? = null,
     val isRegistrationSuccess: Boolean = false,
     val requiresOtp: Boolean = false,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val phone: String = ""
 )
 
 sealed interface AuthEvent {
@@ -85,7 +86,12 @@ class AuthViewModel @Inject constructor(
                 )
             }) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, isRegistrationSuccess = true) }
+                    _uiState.update { it.copy(
+                        isLoading = false, 
+                        isRegistrationSuccess = true,
+                        requiresOtp = true,
+                        phone = phone
+                    ) }
                     _events.send(AuthEvent.RegistrationSuccess)
                 }
                 is ApiResult.Failure -> {
@@ -108,13 +114,13 @@ class AuthViewModel @Inject constructor(
             }) {
                 is ApiResult.Success -> {
                     val response = result.data
-                    if (!response.phoneVerified) {
+                    if (response.phoneVerified != true) {
                         _uiState.update { it.copy(isLoading = false, requiresOtp = true) }
                     } else {
-                        val role = if (response.role.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
+                        val role = if (response.role?.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
                         sessionDataStore.saveSession(
-                            accessToken = response.accessToken,
-                            refreshToken = response.refreshToken,
+                            accessToken = response.accessToken ?: "",
+                            refreshToken = response.refreshToken ?: "",
                             userId = response.userId ?: "",
                             role = role
                         )
@@ -144,10 +150,10 @@ class AuthViewModel @Inject constructor(
             }) {
                 is ApiResult.Success -> {
                     val response = result.data
-                    val role = if (response.role.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
+                    val role = if (response.role?.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
                     sessionDataStore.saveSession(
-                        accessToken = response.accessToken,
-                        refreshToken = response.refreshToken,
+                        accessToken = response.accessToken ?: "",
+                        refreshToken = response.refreshToken ?: "",
                         userId = response.userId ?: "",
                         role = role
                     )
@@ -161,6 +167,24 @@ class AuthViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(isLoading = false, error = "Network error. Please check your connection.")
                     }
+                }
+            }
+        }
+    }
+
+    fun resendOtp() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val result = safeApiCall { authApi.sendPhoneOtp() }) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    // Maybe show a success message?
+                }
+                is ApiResult.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                }
+                is ApiResult.NetworkError -> {
+                    _uiState.update { it.copy(isLoading = false, error = "Network error") }
                 }
             }
         }

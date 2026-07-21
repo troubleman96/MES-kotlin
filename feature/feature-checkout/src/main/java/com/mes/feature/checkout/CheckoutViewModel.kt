@@ -148,7 +148,14 @@ class CheckoutViewModel @Inject constructor(
                 // Assuming we initiate payment for the group or the first sub-order for now
                 val firstSubOrder = subOrders.firstOrNull()
                 if (firstSubOrder != null) {
-                    val payResult = safeApiCall { ordersApi.initiatePayment(firstSubOrder.id) }
+                    val payResult = safeApiCall { 
+                        ordersApi.initiatePayment(
+                            id = firstSubOrder.id,
+                            request = com.mes.core.network.PaymentRequest(
+                                phoneNumber = _uiState.value.paymentPhone.ifBlank { null }
+                            )
+                        ) 
+                    }
                     
                     if (payResult is ApiResult.Success) {
                         // Poll for payment status

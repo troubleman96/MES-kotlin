@@ -25,7 +25,10 @@ interface OrdersApi {
     ): Envelope<Order>
 
     @POST("orders/{id}/pay/")
-    suspend fun initiatePayment(@Path("id") id: String): Envelope<PaymentIntentResponse>
+    suspend fun initiatePayment(
+        @Path("id") id: String,
+        @Body request: PaymentRequest = PaymentRequest()
+    ): Envelope<PaymentIntentResponse>
 
     @GET("orders/{id}/payment-status/")
     suspend fun getPaymentStatus(@Path("id") id: String): Envelope<PaymentStatusResponse>
@@ -55,6 +58,11 @@ data class SubOrderMinimal(
 @Serializable
 data class StatusUpdateRequest(
     val status: String
+)
+
+@Serializable
+data class PaymentRequest(
+    @SerialName("phone_number") val phoneNumber: String? = null
 )
 
 @Serializable

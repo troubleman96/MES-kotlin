@@ -139,8 +139,9 @@ fun MesNavHost() {
             RegisterScreen(
                 initialRole = currentUserRole ?: UserRole.BUYER,
                 onRegisterSuccess = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.REGISTER) { inclusive = true }
+                    isLoggedIn = true
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onLoginClick = { navController.popBackStack() }

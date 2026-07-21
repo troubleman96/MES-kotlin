@@ -164,6 +164,12 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
 
+                    LaunchedEffect(uiState.phone) {
+                        if (uiState.phone.isNotBlank()) {
+                            phone = uiState.phone
+                        }
+                    }
+
                     OutlinedTextField(
                         value = otp,
                         onValueChange = { otp = it },
@@ -172,6 +178,14 @@ fun LoginScreen(
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+
+                    TextButton(
+                        onClick = { viewModel.resendOtp() },
+                        modifier = Modifier.align(Alignment.End),
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text("Resend OTP", color = MesColor.PrimaryTeal)
+                    }
                 }
             }
 

@@ -51,10 +51,10 @@ data class OtpRequest(
 @Serializable
 data class AuthResponse(
     @SerialName("id") val userId: String? = null,
-    @SerialName("access_token") val accessToken: String,
-    @SerialName("refresh_token") val refreshToken: String,
-    @SerialName("expires_in") val expiresIn: Int,
-    @SerialName("role") val role: String,
-    @SerialName("phone_verified") val phoneVerified: Boolean,
-    @SerialName("profile_complete") val profileComplete: Boolean
+    @SerialName("access_token") val accessToken: String? = null,
+    @SerialName("refresh_token") val refreshToken: String? = null,
+    @SerialName("expires_in") val expiresIn: Int? = null,
+    @SerialName("role") val role: String? = null,
+    @SerialName("phone_verified") val phoneVerified: Boolean? = null,
+    @SerialName("profile_complete") val profileComplete: Boolean? = null
 )

@@ -66,11 +66,12 @@ fun RegisterScreen(
     var lastName by rememberSaveable { mutableStateOf("") }
     var organizationName by rememberSaveable { mutableStateOf("") }
     var role by rememberSaveable { mutableStateOf(initialRole) }
+    var otp by rememberSaveable { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
-            if (event is AuthEvent.RegistrationSuccess) {
+            if (event is AuthEvent.LoginSuccess) {
                 onRegisterSuccess()
             }
         }
@@ -111,111 +112,147 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Register as:",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
-            )
+            if (!uiState.requiresOtp) {
+                Text(
+                    text = "Register as:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                UserRole.entries.forEach { roleOption ->
-                    FilterChip(
-                        selected = role == roleOption,
-                        onClick = { role = roleOption },
-                        label = { Text(roleOption.name.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }) },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MesColor.PrimaryTealContainer,
-                            selectedLabelColor = MesColor.PrimaryTeal
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    UserRole.entries.forEach { roleOption ->
+                        FilterChip(
+                            selected = role == roleOption,
+                            onClick = { role = roleOption },
+                            label = { Text(roleOption.name.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }) },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MesColor.PrimaryTealContainer,
+                                selectedLabelColor = MesColor.PrimaryTeal
+                            )
                         )
-                    )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+            if (!uiState.requiresOtp) {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = firstName,
+                        onValueChange = { firstName = it },
+                        label = { Text("First Name") },
+                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
 
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                    OutlinedTextField(
+                        value = lastName,
+                        onValueChange = { lastName = it },
+                        label = { Text("Last Name") },
+                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    )
 
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone Number") },
-                    leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-                )
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text("Phone Number") },
+                        leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    )
 
-                OutlinedTextField(
-                    value = organizationName,
-                    onValueChange = { organizationName = it },
-                    label = { Text("Business / Facility Name") },
-                    leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null) },
+                    OutlinedTextField(
+                        value = organizationName,
+                        onValueChange = { organizationName = it },
+                        label = { Text("Business / Facility Name") },
+                        leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            } else {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Registration successful! Enter the OTP sent to $phone",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MesColor.Ink600
+                    )
+
+                    OutlinedTextField(
+                        value = otp,
+                        onValueChange = { otp = it },
+                        label = { Text("OTP Code") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    
+                    TextButton(
+                        onClick = { viewModel.resendOtp() },
+                        modifier = Modifier.align(Alignment.End),
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text("Resend OTP", color = MesColor.PrimaryTeal)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    viewModel.register(
-                        email = email,
-                        phone = phone,
-                        password = password,
-                        firstName = firstName,
-                        lastName = lastName,
-                        role = role,
-                        businessName = organizationName.ifBlank { "" },
-                        facilityName = organizationName.ifBlank { "" }
-                    )
+                    if (uiState.requiresOtp) {
+                        viewModel.verifyOtp(phone, otp)
+                    } else {
+                        viewModel.register(
+                            email = email,
+                            phone = phone,
+                            password = password,
+                            firstName = firstName,
+                            lastName = lastName,
+                            role = role,
+                            businessName = organizationName.ifBlank { "" },
+                            facilityName = organizationName.ifBlank { "" }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -223,8 +260,8 @@ fun RegisterScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MesColor.PrimaryTeal
                 ),
-                enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank()
-                        && firstName.isNotBlank() && phone.isNotBlank() && organizationName.isNotBlank()
+                enabled = !uiState.isLoading && (uiState.requiresOtp || (email.isNotBlank() && password.isNotBlank()
+                        && firstName.isNotBlank() && phone.isNotBlank() && organizationName.isNotBlank()))
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -233,7 +270,7 @@ fun RegisterScreen(
                     )
                 } else {
                     Text(
-                        text = "Create Account",
+                        text = if (uiState.requiresOtp) "Verify OTP" else "Create Account",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
