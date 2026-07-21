@@ -22,13 +22,23 @@ import coil.compose.AsyncImage
 import com.mes.core.designsystem.component.MerchantTrustCard
 import com.mes.core.designsystem.theme.MesColor
 
+import androidx.compose.foundation.background
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.catalog.presentation.SellersViewModel
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SellersScreen(
     onSellerClick: (String) -> Unit,
     onNotificationsClick: () -> Unit,
-    onRegisterSellerClick: () -> Unit
+    onRegisterSellerClick: () -> Unit,
+    viewModel: SellersViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,19 +79,22 @@ fun SellersScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            val demoSellers = listOf(
-                SellerData("1", "MedTech Supplies", "Dar es Salaam", 4.8f, "https://images.unsplash.com/photo-1576091160550-2173dad99901?auto=format&fit=crop&q=80&w=200"),
-                SellerData("2", "Kariakoo Medical", "Dar es Salaam", 4.5f, "https://images.unsplash.com/photo-1585421514738-ee1b3bb6fb98?auto=format&fit=crop&q=80&w=200"),
-                SellerData("3", "Arusha Diagnostics", "Arusha", 4.9f, "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=200"),
-                SellerData("4", "Lake Zone Health", "Mwanza", 4.2f, "https://images.unsplash.com/photo-1581594658553-35942489435b?auto=format&fit=crop&q=80&w=200")
-            )
-
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(demoSellers) { seller ->
-                    SellerCard(seller = seller, onClick = { onSellerClick(seller.id) })
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MesColor.PrimaryTeal)
+                }
+            } else if (uiState.sellers.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = uiState.error ?: "No sellers found")
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(uiState.sellers) { seller ->
+                        SellerCard(seller = seller, onClick = { onSellerClick(seller.id) })
+                    }
                 }
             }
         }
@@ -89,7 +102,7 @@ fun SellersScreen(
 }
 
 @Composable
-private fun SellerCard(seller: SellerData, onClick: () -> Unit) {
+private fun SellerCard(seller: com.mes.core.domain.User, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -103,35 +116,41 @@ private fun SellerCard(seller: SellerData, onClick: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = seller.imageUrl,
-                contentDescription = seller.name,
+            Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(CircleShape)
+                    .background(MesColor.PrimaryTealContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = (seller.firstName.take(1) + seller.lastName.take(1)).uppercase(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MesColor.PrimaryTeal,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = seller.name,
+                    text = seller.businessName ?: "${seller.firstName} ${seller.lastName}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = seller.location,
+                    text = seller.facilityName ?: "Verified Supplier",
                     style = MaterialTheme.typography.bodySmall,
                     color = MesColor.Ink400
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                MerchantTrustCard(merchantName = seller.name, isVerified = true)
+                MerchantTrustCard(merchantName = seller.businessName ?: seller.firstName, isVerified = seller.isVerifiedMerchant)
             }
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "★ ${seller.rating}",
+                    text = "★ 4.8",
                     style = MaterialTheme.typography.titleSmall,
                     color = MesColor.AccentAmber,
                     fontWeight = FontWeight.Bold

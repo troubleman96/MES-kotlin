@@ -28,42 +28,40 @@ import com.mes.core.domain.Product
 import com.mes.core.domain.ProductImage
 import kotlinx.datetime.*
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.catalog.presentation.ProductDetailViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     productId: String,
     onBackClick: () -> Unit,
     onAddToCart: () -> Unit,
-    onMerchantClick: (String) -> Unit
+    onMerchantClick: (String) -> Unit,
+    viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
-    // In a real app, we'd fetch from API using productId
-    val product = remember {
-        Product(
-            id = productId,
-            name = "Portable Ventilator Pro 3000",
-            description = "Professional-grade portable ventilator for ICU and emergency use. Features advanced tidal volume control, multiple ventilation modes, and long battery life. Suitable for adult and pediatric patients.",
-            category = com.mes.core.domain.ProductCategory.LIFE_SUPPORT,
-            merchantName = "MedTech Supplies Ltd",
-            merchantIsVerified = true,
-            dailyRateTzs = 50000,
-            images = listOf(
-                ProductImage("1", "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+1"),
-                ProductImage("2", "https://via.placeholder.com/600x400/5FBFBE/FFFFFF?text=Ventilator+2"),
-                ProductImage("3", "https://via.placeholder.com/600x400/0E7C7B/FFFFFF?text=Ventilator+3")
-            ),
-            specs = mapOf(
-                "Model" to "VentPro 3000",
-                "Manufacturer" to "MedTech Corp",
-                "Weight" to "5.2 kg",
-                "Power" to "AC 100-240V, 50/60Hz",
-                "Battery" to "Lithium-ion, 4 hours",
-                "Ventilation Modes" to "VCV, PCV, SIMV, CPAP",
-                "Tidal Volume" to "50-2000 mL",
-                "Display" to "10.1\" color touchscreen"
-            ),
-            isFeatured = true,
-            isActive = true
-        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(productId) {
+        viewModel.loadProduct(productId)
+    }
+
+    val product = uiState.product
+
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MesColor.PrimaryTeal)
+        }
+        return
+    }
+
+    if (product == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = uiState.error ?: "Product not found")
+        }
+        return
     }
 
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())

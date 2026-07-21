@@ -31,72 +31,43 @@ import com.mes.core.domain.Product
 import com.mes.core.domain.ProductCategory
 import com.mes.core.domain.ProductImage
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.catalog.presentation.SellerDetailViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SellerDetailScreen(
     sellerId: String,
     onBackClick: () -> Unit,
-    onProductClick: (String) -> Unit
+    onProductClick: (String) -> Unit,
+    viewModel: SellerDetailViewModel = hiltViewModel()
 ) {
-    // Demo data for the seller
-    val seller = remember(sellerId) {
-        SellerFullData(
-            id = sellerId,
-            name = "MedTech Supplies Ltd",
-            location = "Bagamoyo Road, Dar es Salaam",
-            rating = 4.8f,
-            reviewCount = 124,
-            bio = "Premier provider of high-quality medical imaging and diagnostic equipment in Tanzania. We specialize in MRI, CT Scans, and ICU ventilators.",
-            phone = "+255 712 345 678",
-            email = "info@medtech.co.tz",
-            imageUrl = "https://images.unsplash.com/photo-1576091160550-2173dad99901?auto=format&fit=crop&q=80&w=400"
-        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(sellerId) {
+        viewModel.loadSeller(sellerId)
     }
 
-    val products = remember(sellerId) {
-        listOf(
-            Product(
-                id = "p1",
-                name = "Portable Ventilator Pro",
-                category = ProductCategory.LIFE_SUPPORT,
-                description = "High quality ventilator",
-                merchantName = seller.name,
-                dailyRateTzs = 50000,
-                images = listOf(ProductImage("i1", "https://via.placeholder.com/300?text=Ventilator")),
-                isActive = true
-            ),
-            Product(
-                id = "p2",
-                name = "Diagnostic Ultrasound",
-                category = ProductCategory.DIAGNOSTIC,
-                description = "High quality ultrasound",
-                merchantName = seller.name,
-                dailyRateTzs = 75000,
-                images = listOf(ProductImage("i2", "https://via.placeholder.com/300?text=Ultrasound")),
-                isActive = true
-            ),
-            Product(
-                id = "p3",
-                name = "Patient Monitor G30",
-                category = ProductCategory.MONITORING,
-                description = "High quality monitor",
-                merchantName = seller.name,
-                dailyRateTzs = 30000,
-                images = listOf(ProductImage("i3", "https://via.placeholder.com/300?text=Monitor")),
-                isActive = true
-            ),
-            Product(
-                id = "p4",
-                name = "Digital X-Ray Unit",
-                category = ProductCategory.DIAGNOSTIC,
-                description = "High quality x-ray",
-                merchantName = seller.name,
-                dailyRateTzs = 120000,
-                images = listOf(ProductImage("i4", "https://via.placeholder.com/300?text=X-Ray")),
-                isActive = false
-            )
-        )
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MesColor.PrimaryTeal)
+        }
+        return
     }
+
+    val merchant = uiState.merchant
+    if (merchant == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = uiState.error ?: "Seller not found")
+        }
+        return
+    }
+
+    val products = uiState.products
 
     Scaffold(
         topBar = {
@@ -121,7 +92,7 @@ fun SellerDetailScreen(
         ) {
             // Seller Header Info
             item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                SellerHeader(seller = seller)
+                SellerHeader(merchant = merchant)
             }
 
             item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
@@ -142,21 +113,27 @@ fun SellerDetailScreen(
 }
 
 @Composable
-private fun SellerHeader(seller: SellerFullData) {
+private fun SellerHeader(merchant: com.mes.core.domain.User) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = seller.imageUrl,
-                contentDescription = seller.name,
+            Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(CircleShape)
+                    .background(MesColor.PrimaryTealContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = (merchant.firstName.take(1) + merchant.lastName.take(1)).uppercase(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MesColor.PrimaryTeal,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = seller.name,
+                    text = merchant.businessName ?: "${merchant.firstName} ${merchant.lastName}",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -169,7 +146,7 @@ private fun SellerHeader(seller: SellerFullData) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${seller.rating} (${seller.reviewCount} reviews)",
+                        text = "4.8 (Verified)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MesColor.Ink600
                     )
@@ -180,16 +157,16 @@ private fun SellerHeader(seller: SellerFullData) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = seller.bio,
+            text = merchant.facilityName ?: "Verified Medical Equipment Supplier",
             style = MaterialTheme.typography.bodyMedium,
             color = MesColor.Ink600
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        InfoRow(icon = Icons.Filled.LocationOn, text = seller.location)
-        InfoRow(icon = Icons.Filled.Phone, text = seller.phone)
-        InfoRow(icon = Icons.Filled.Email, text = seller.email)
+        InfoRow(icon = Icons.Filled.LocationOn, text = "Tanzania")
+        InfoRow(icon = Icons.Filled.Phone, text = merchant.phone ?: "No phone")
+        InfoRow(icon = Icons.Filled.Email, text = merchant.email)
 
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider(color = MesColor.Ink100)
