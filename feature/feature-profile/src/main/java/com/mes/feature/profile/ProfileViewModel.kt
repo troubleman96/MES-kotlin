@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,7 +32,19 @@ class ProfileViewModel @Inject constructor(
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadProfile()
+        observeSession()
+    }
+
+    private fun observeSession() {
+        viewModelScope.launch {
+            sessionDataStore.accessToken.collectLatest { token ->
+                if (token.isNullOrBlank()) {
+                    _uiState.update { it.copy(user = null) }
+                } else {
+                    loadProfile()
+                }
+            }
+        }
     }
 
     fun loadProfile() {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -46,14 +47,13 @@ class AuthViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
-        checkSession()
+        observeSession()
     }
 
-    private fun checkSession() {
+    private fun observeSession() {
         viewModelScope.launch {
-            val token = sessionDataStore.accessToken.first()
-            if (!token.isNullOrBlank()) {
-                _uiState.update { it.copy(isLoggedIn = true) }
+            sessionDataStore.accessToken.collectLatest { token ->
+                _uiState.update { it.copy(isLoggedIn = !token.isNullOrBlank()) }
             }
         }
     }
