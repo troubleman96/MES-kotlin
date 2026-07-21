@@ -52,6 +52,12 @@ import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.UserRole
 import kotlinx.coroutines.launch
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+
 @Composable
 fun OnboardingScreen(
     onFinished: (UserRole) -> Unit,
@@ -74,31 +80,34 @@ fun OnboardingScreen(
                     onSelect = viewModel::setLanguage
                 )
                 2 -> ValuePropPage(
+                    imageUrl = "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=1000",
                     icon = Icons.Filled.MedicalServices,
                     title = if (uiState.selectedLanguage == "sw") "Ganga vifaa kwa dakika, si siku" else "Discover equipment in minutes, not days",
                     subtitle = if (uiState.selectedLanguage == "sw")
                         "Vinjari orodha yetu ya vifaa vya matibabu vilivyoidhinishwa na upate bei bora"
                     else
                         "Browse our curated catalogue of certified medical equipment and get the best rates",
-                    gradientColors = listOf(MesColor.PrimaryTeal, MesColor.PrimaryTealDark)
+                    gradientColors = listOf(MesColor.PrimaryTeal.copy(alpha = 0.8f), MesColor.PrimaryTealDark.copy(alpha = 0.9f))
                 )
                 3 -> ValuePropPage(
+                    imageUrl = "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1000",
                     icon = Icons.Filled.Payment,
                     title = if (uiState.selectedLanguage == "sw") "Lipa kama unavyolipa sasa" else "Pay the way you already do",
                     subtitle = if (uiState.selectedLanguage == "sw")
                         "M-Pesa, Tigo Pesa, Airtel Money, Mixx by Yas — malipo ya simu yako"
                     else
                         "M-Pesa, Tigo Pesa, Airtel Money, Mixx by Yas — right from your phone",
-                    gradientColors = listOf(MesColor.AccentAmber, MesColor.AccentAmberDark)
+                    gradientColors = listOf(MesColor.AccentAmber.copy(alpha = 0.8f), MesColor.AccentAmberDark.copy(alpha = 0.9f))
                 )
                 4 -> ValuePropPage(
+                    imageUrl = "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1000",
                     icon = Icons.Filled.Description,
                     title = if (uiState.selectedLanguage == "sw") "Kila upangaji, mkataba halisi" else "Every rental, a real contract",
                     subtitle = if (uiState.selectedLanguage == "sw")
                         "Mikataba ya moja kwa moja inayotolewa kwa kila upangaji"
                     else
                         "Auto-generated rental agreements for every order — formalized, signed, stored",
-                    gradientColors = listOf(MesColor.Success, MesColor.PrimaryTeal)
+                    gradientColors = listOf(MesColor.Success.copy(alpha = 0.8f), MesColor.PrimaryTeal.copy(alpha = 0.9f))
                 )
                 5 -> RoleSelectPage(
                     language = uiState.selectedLanguage,
@@ -150,34 +159,47 @@ fun OnboardingScreen(
 @Composable
 private fun SplashPage() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(MesColor.PrimaryTeal, MesColor.PrimaryTealDark)
-                )
-            ),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        AsyncImage(
+            model = "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&q=80&w=1000",
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(MesColor.PrimaryTeal.copy(alpha = 0.7f), MesColor.PrimaryTealDark.copy(alpha = 0.9f))
+                    )
+                )
+        )
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = Icons.Filled.MedicalServices,
                 contentDescription = "MES Logo",
                 tint = MesColor.Surface0,
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(100.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "MES",
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MesColor.Surface0
+                    color = MesColor.Surface0,
+                    letterSpacing = 8.sp
                 )
             )
             Text(
                 text = "Medical Equipment Supply",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MesColor.Surface0.copy(alpha = 0.8f)
+                    color = MesColor.Surface0.copy(alpha = 0.9f),
+                    fontWeight = FontWeight.Medium
                 )
             )
         }
@@ -283,52 +305,77 @@ private fun LanguageCard(
 
 @Composable
 private fun ValuePropPage(
+    imageUrl: String,
     icon: ImageVector,
     title: String,
     subtitle: String,
-    gradientColors: List<androidx.compose.ui.graphics.Color>
+    gradientColors: List<Color>
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(Brush.verticalGradient(gradientColors)),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MesColor.Surface0,
-                modifier = Modifier.size(60.dp)
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Brush.verticalGradient(gradientColors)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MesColor.Surface0,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 32.sp,
+                    color = Color.White
+                ),
+                textAlign = TextAlign.Center
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(120.dp)) // Leave space for progress dots
         }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                lineHeight = 32.sp
-            ),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MesColor.Ink600,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
