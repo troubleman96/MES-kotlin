@@ -25,6 +25,7 @@ android {
 dependencies {
     implementation(project(":core:core-designsystem"))
     implementation(project(":core:core-domain"))
+    implementation(project(":core:core-network"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)

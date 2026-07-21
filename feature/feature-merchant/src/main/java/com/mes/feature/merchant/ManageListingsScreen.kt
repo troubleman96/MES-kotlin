@@ -16,13 +16,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mes.core.designsystem.theme.MesColor
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.merchant.ManageListingsViewModel
+import androidx.compose.runtime.getValue
+import com.mes.core.domain.Product
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageListingsScreen(
     onBackClick: () -> Unit,
     onAddListingClick: () -> Unit,
-    onEditListingClick: (String) -> Unit
+    onEditListingClick: (String) -> Unit,
+    viewModel: ManageListingsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -43,18 +52,32 @@ fun ManageListingsScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(demoListings) { listing ->
-                ListingItem(
-                    listing = listing,
-                    onEditClick = { onEditListingClick(listing.id) }
-                )
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MesColor.PrimaryTeal)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (uiState.products.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text(text = "No equipment listed yet", color = MesColor.Ink400)
+                        }
+                    }
+                } else {
+                    items(uiState.products) { product ->
+                        ListingItem(
+                            product = product,
+                            onEditClick = { onEditListingClick(product.id) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -62,7 +85,7 @@ fun ManageListingsScreen(
 
 @Composable
 private fun ListingItem(
-    listing: ListingData,
+    product: Product,
     onEditClick: () -> Unit
 ) {
     Card(
@@ -77,12 +100,12 @@ private fun ListingItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = listing.name,
+                    text = product.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "TZS ${listing.price}/day • ${listing.stock} in stock",
+                    text = "TZS ${"%,d".format(product.dailyRateTzs)}/day",
                     style = MaterialTheme.typography.bodySmall,
                     color = MesColor.Ink400
                 )

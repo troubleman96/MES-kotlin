@@ -47,6 +47,12 @@ import com.mes.core.designsystem.theme.MesColor
 
 import com.mes.core.domain.UserRole
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.profile.ProfileViewModel
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -56,8 +62,11 @@ fun ProfileScreen(
     onSwitchRole: () -> Unit,
     onNavigateToOrders: () -> Unit,
     onNavigateToAddresses: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,67 +79,85 @@ fun ProfileScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Profile header
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MesColor.PrimaryTealContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MesColor.PrimaryTeal)
+            }
+        } else {
+            val user = uiState.user
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Profile header
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MesColor.PrimaryTealContainer
+                        )
                     ) {
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(MesColor.PrimaryTeal),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "JM",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MesColor.Surface0,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(MesColor.PrimaryTeal),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = user?.let { (it.firstName.take(1) + it.lastName.take(1)).uppercase() } ?: "??",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MesColor.Surface0,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "John Mwakasege",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Muhimbili National Hospital",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MesColor.Ink600
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (currentRole == UserRole.BUYER) "Buyer Account" else "Merchant Account",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MesColor.PrimaryTeal,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = user?.let { "${it.firstName} ${it.lastName}" } ?: "Loading...",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                user?.facilityName?.let {
+                                    Text(
+                                        text = it,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MesColor.Ink600
+                                    )
+                                }
+                                user?.businessName?.let {
+                                    Text(
+                                        text = it,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MesColor.Ink600
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (currentRole == UserRole.BUYER) "Buyer Account" else "Merchant Account",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MesColor.PrimaryTeal,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
-            }
+
+                // ... rest of the items remain similar but potentially data-driven
+                // For now, focusing on removing the "Switch to Merchant" and demo labels
 
             // My Addresses
             item {

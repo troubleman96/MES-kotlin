@@ -45,6 +45,12 @@ import androidx.compose.ui.unit.dp
 import com.mes.core.designsystem.component.StatusChip
 import com.mes.core.designsystem.theme.MesColor
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.merchant.MerchantDashboardViewModel
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MerchantDashboardScreen(
@@ -53,8 +59,11 @@ fun MerchantDashboardScreen(
     onAddListingClick: () -> Unit,
     onManageListingsClick: () -> Unit,
     onViewOrdersClick: () -> Unit,
-    onOrderClick: (String) -> Unit
+    onOrderClick: (String) -> Unit,
+    viewModel: MerchantDashboardViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -95,97 +104,114 @@ fun MerchantDashboardScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Stats cards
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    StatCard(
-                        title = "Active Rentals",
-                        value = "12",
-                        icon = Icons.Filled.Inventory,
-                        containerColor = MesColor.PrimaryTealContainer,
-                        contentColor = MesColor.PrimaryTeal,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatCard(
-                        title = "This Month",
-                        value = "TZS 2.4M",
-                        icon = Icons.Filled.TrendingUp,
-                        containerColor = MesColor.AccentAmberContainer,
-                        contentColor = MesColor.AccentAmber,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MesColor.PrimaryTeal)
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Stats cards
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        StatCard(
+                            title = "Active Rentals",
+                            value = uiState.activeRentals.toString(),
+                            icon = Icons.Filled.Inventory,
+                            containerColor = MesColor.PrimaryTealContainer,
+                            contentColor = MesColor.PrimaryTeal,
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatCard(
+                            title = "This Month",
+                            value = "TZS ${"%,d".format(uiState.monthlyRevenue)}",
+                            icon = Icons.Filled.TrendingUp,
+                            containerColor = MesColor.AccentAmberContainer,
+                            contentColor = MesColor.AccentAmber,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
 
-            // Pending orders
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                // Pending orders
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Incoming Orders",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "See All",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MesColor.PrimaryTeal,
+                            modifier = Modifier.clickable { onViewOrdersClick() }
+                        )
+                    }
+                }
+
+                if (uiState.incomingOrders.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No incoming orders",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MesColor.Ink400,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
+                } else {
+                    items(uiState.incomingOrders) { order ->
+                        OrderRequestCard(
+                            orderNumber = order.orderNumber,
+                            product = order.items.firstOrNull()?.productName ?: "Multiple Items",
+                            customer = order.facilityName ?: "Customer",
+                            status = order.status,
+                            onClick = { onOrderClick(order.id) }
+                        )
+                    }
+                }
+
+                // Quick actions
+                item {
                     Text(
-                        text = "Incoming Orders",
+                        text = "Quick Actions",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "See All",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MesColor.PrimaryTeal,
-                        modifier = Modifier.clickable { onViewOrdersClick() }
+                }
+
+                item {
+                    QuickActionCard(
+                        icon = Icons.Filled.Inventory,
+                        title = "Manage Listings",
+                        subtitle = "Add, edit, or remove equipment",
+                        onClick = onManageListingsClick
                     )
                 }
-            }
 
-            items(demoOrders) { order ->
-                OrderRequestCard(
-                    orderNumber = order.first,
-                    product = order.second,
-                    customer = order.third,
-                    status = order.fourth,
-                    onClick = { onOrderClick(order.first) }
-                )
-            }
+                item {
+                    QuickActionCard(
+                        icon = Icons.Filled.Receipt,
+                        title = "View All Orders",
+                        subtitle = "See incoming and past orders",
+                        onClick = onViewOrdersClick
+                    )
+                }
 
-            // Quick actions
-            item {
-                Text(
-                    text = "Quick Actions",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
-
-            item {
-                QuickActionCard(
-                    icon = Icons.Filled.Inventory,
-                    title = "Manage Listings",
-                    subtitle = "Add, edit, or remove equipment",
-                    onClick = onManageListingsClick
-                )
-            }
-
-            item {
-                QuickActionCard(
-                    icon = Icons.Filled.Receipt,
-                    title = "View All Orders",
-                    subtitle = "See incoming and past orders",
-                    onClick = onViewOrdersClick
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }

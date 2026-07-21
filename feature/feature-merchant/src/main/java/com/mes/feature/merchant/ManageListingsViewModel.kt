@@ -1,9 +1,9 @@
-package com.mes.feature.orders
+package com.mes.feature.merchant
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mes.core.domain.Order
-import com.mes.core.network.OrdersApi
+import com.mes.core.domain.Product
+import com.mes.core.network.CatalogApi
 import com.mes.core.network.envelope.ApiResult
 import com.mes.core.network.envelope.safeApiCall
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,31 +14,31 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class OrdersUiState(
-    val orders: List<Order> = emptyList(),
-    val selectedOrder: Order? = null,
+data class ManageListingsUiState(
+    val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
-class OrdersViewModel @Inject constructor(
-    private val ordersApi: OrdersApi
+class ManageListingsViewModel @Inject constructor(
+    private val catalogApi: CatalogApi
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OrdersUiState())
-    val uiState: StateFlow<OrdersUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ManageListingsUiState())
+    val uiState: StateFlow<ManageListingsUiState> = _uiState.asStateFlow()
 
     init {
-        loadOrders()
+        loadMyProducts()
     }
 
-    fun loadOrders() {
+    fun loadMyProducts() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = safeApiCall { ordersApi.getOrders() }) {
+            // Using getMyProducts endpoint from CatalogApi
+            when (val result = safeApiCall { catalogApi.getMyProducts() }) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(orders = result.data, isLoading = false) }
+                    _uiState.update { it.copy(products = result.data, isLoading = false) }
                 }
                 is ApiResult.Failure -> {
                     _uiState.update { it.copy(isLoading = false, error = result.message) }
@@ -47,12 +47,6 @@ class OrdersViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, error = "Network error") }
                 }
             }
-        }
-    }
-
-    fun selectOrder(orderId: String) {
-        _uiState.update { state ->
-            state.copy(selectedOrder = state.orders.find { it.id == orderId })
         }
     }
 }
