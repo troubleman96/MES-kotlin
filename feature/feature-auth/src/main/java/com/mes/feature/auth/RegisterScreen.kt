@@ -64,7 +64,7 @@ fun RegisterScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var firstName by rememberSaveable { mutableStateOf("") }
     var lastName by rememberSaveable { mutableStateOf("") }
-    var businessName by rememberSaveable { mutableStateOf("") }
+    var organizationName by rememberSaveable { mutableStateOf("") }
     var role by rememberSaveable { mutableStateOf(initialRole) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -193,8 +193,8 @@ fun RegisterScreen(
                 )
 
                 OutlinedTextField(
-                    value = businessName,
-                    onValueChange = { businessName = it },
+                    value = organizationName,
+                    onValueChange = { organizationName = it },
                     label = { Text("Business / Facility Name") },
                     leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
@@ -213,8 +213,8 @@ fun RegisterScreen(
                         firstName = firstName,
                         lastName = lastName,
                         role = role,
-                        businessName = if (role == UserRole.MERCHANT) businessName.ifBlank { null } else null,
-                        facilityName = if (role == UserRole.BUYER) businessName.ifBlank { null } else null
+                        businessName = organizationName.ifBlank { "" },
+                        facilityName = organizationName.ifBlank { "" }
                     )
                 },
                 modifier = Modifier
@@ -224,7 +224,7 @@ fun RegisterScreen(
                     containerColor = MesColor.PrimaryTeal
                 ),
                 enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank()
-                        && firstName.isNotBlank() && phone.isNotBlank()
+                        && firstName.isNotBlank() && phone.isNotBlank() && organizationName.isNotBlank()
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(

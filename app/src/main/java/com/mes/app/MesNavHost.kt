@@ -66,16 +66,13 @@ fun MesNavHost() {
 
     LaunchedEffect(authUiState.isLoggedIn) {
         isLoggedIn = authUiState.isLoggedIn
-        // If we want to stay logged in across restarts, we should read from SessionDataStore
     }
     
-    val sessionDataStore = com.mes.core.datastore.SessionDataStore(androidx.compose.ui.platform.LocalContext.current)
-    val sessionRole by sessionDataStore.userRole.collectAsStateWithLifecycle(initialValue = null)
+    val sessionRole by authViewModel.sessionDataStore.userRole.collectAsStateWithLifecycle(initialValue = null)
     
     LaunchedEffect(sessionRole) {
         if (sessionRole != null) {
             currentUserRole = sessionRole
-            isLoggedIn = true
         }
     }
     

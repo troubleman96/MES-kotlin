@@ -32,6 +32,7 @@ android {
 dependencies {
     implementation(project(":core:core-designsystem"))
     implementation(project(":core:core-network"))
+    implementation(project(":core:core-datastore"))
     implementation(project(":core:core-database"))
     implementation(project(":core:core-domain"))
 

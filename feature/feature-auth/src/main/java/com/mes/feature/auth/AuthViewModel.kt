@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,7 +36,7 @@ sealed interface AuthEvent {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authApi: AuthApi,
-    private val sessionDataStore: SessionDataStore
+    val sessionDataStore: SessionDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -43,6 +44,19 @@ class AuthViewModel @Inject constructor(
 
     private val _events = Channel<AuthEvent>()
     val events = _events.receiveAsFlow()
+
+    init {
+        checkSession()
+    }
+
+    private fun checkSession() {
+        viewModelScope.launch {
+            val token = sessionDataStore.accessToken.first()
+            if (!token.isNullOrBlank()) {
+                _uiState.update { it.copy(isLoggedIn = true) }
+            }
+        }
+    }
 
     fun register(
         email: String,

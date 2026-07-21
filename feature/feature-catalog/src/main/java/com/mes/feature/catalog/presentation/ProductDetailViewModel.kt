@@ -18,6 +18,9 @@ import com.mes.core.domain.CartLine
 import kotlinx.datetime.Clock
 import javax.inject.Inject
 
+import com.mes.core.datastore.SessionDataStore
+import kotlinx.coroutines.flow.first
+
 data class ProductDetailUiState(
     val product: Product? = null,
     val isLoading: Boolean = false,
@@ -29,7 +32,8 @@ data class ProductDetailUiState(
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     private val catalogApi: CatalogApi,
-    private val cartApi: CartApi
+    private val cartApi: CartApi,
+    private val sessionDataStore: SessionDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -57,11 +61,23 @@ class ProductDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isAddingToCart = true) }
             
+            // Check if we have a token
+            val token = sessionDataStore.accessToken.first()
+            if (token.isNullOrBlank()) {
+                _uiState.update { it.copy(isAddingToCart = false, error = "Please login to add to cart") }
+                return@launch
+            }
+            
             // Get current cart
             val currentCartResult = safeApiCall { cartApi.getCart() }
             val lines = if (currentCartResult is ApiResult.Success) {
                 currentCartResult.data.lines.toMutableList()
             } else {
+                // If unauthorized, we should probably logout or redirect to login
+                if (currentCartResult is ApiResult.Failure && currentCartResult.code == "http_error" && currentCartResult.message.contains("401")) {
+                     _uiState.update { it.copy(isAddingToCart = false, error = "Session expired. Please login again.") }
+                     return@launch
+                }
                 mutableListOf()
             }
 
