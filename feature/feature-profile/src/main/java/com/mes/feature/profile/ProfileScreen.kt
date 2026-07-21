@@ -45,11 +45,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mes.core.designsystem.theme.MesColor
 
+import com.mes.core.domain.UserRole
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    currentRole: UserRole,
     onBackClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onSwitchRole: () -> Unit,
+    onNavigateToOrders: () -> Unit,
+    onNavigateToAddresses: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -102,7 +109,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "John Mwakasege",
                                 style = MaterialTheme.typography.titleLarge,
@@ -114,11 +121,25 @@ fun ProfileScreen(
                                 color = MesColor.Ink600
                             )
                             Spacer(modifier = Modifier.height(4.dp))
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Buyer",
+                                    text = if (currentRole == UserRole.BUYER) "Buyer" else "Merchant",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MesColor.PrimaryTeal
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "•",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MesColor.Ink400
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (currentRole == UserRole.BUYER) "Switch to Merchant" else "Switch to Buyer",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MesColor.PrimaryTeal,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.clickable { onSwitchRole() }
                                 )
                             }
                         }
@@ -128,11 +149,20 @@ fun ProfileScreen(
 
             // My Addresses
             item {
-                Text(
-                    text = "My Addresses",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "My Addresses",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = onNavigateToAddresses) {
+                        Text("Manage", color = MesColor.PrimaryTeal)
+                    }
+                }
             }
 
             item {
@@ -144,13 +174,15 @@ fun ProfileScreen(
                         AddressItem(
                             label = "Main Receiving",
                             address = "Bagamoyo Road, Ilala, Dar es Salaam",
-                            isDefault = true
+                            isDefault = true,
+                            onClick = onNavigateToAddresses
                         )
                         HorizontalDivider()
                         AddressItem(
                             label = "Pharmacy Stores",
                             address = "Veta Street, Dar es Salaam",
-                            isDefault = false
+                            isDefault = false,
+                            onClick = onNavigateToAddresses
                         )
                     }
                 }
@@ -174,23 +206,27 @@ fun ProfileScreen(
                         ProfileMenuItem(
                             icon = Icons.Filled.Phone,
                             title = "Phone Number",
-                            subtitle = "+255 712 345 678"
+                            subtitle = "+255 712 345 678",
+                            onClick = onNavigateToSettings
                         )
                         HorizontalDivider()
                         ProfileMenuItem(
                             icon = Icons.Filled.Language,
                             title = "Language",
-                            subtitle = "English"
+                            subtitle = "English",
+                            onClick = onNavigateToSettings
                         )
                         HorizontalDivider()
                         ProfileMenuItem(
                             icon = Icons.Filled.Receipt,
                             title = "Order History",
-                            subtitle = "View all past orders"
+                            subtitle = "View all past orders",
+                            onClick = onNavigateToOrders
                         )
                     }
                 }
             }
+
 
             // Logout
             item {
@@ -234,11 +270,13 @@ fun ProfileScreen(
 private fun AddressItem(
     label: String,
     address: String,
-    isDefault: Boolean
+    isDefault: Boolean,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -286,11 +324,13 @@ private fun AddressItem(
 private fun ProfileMenuItem(
     icon: ImageVector,
     title: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -323,3 +363,4 @@ private fun ProfileMenuItem(
         )
     }
 }
+

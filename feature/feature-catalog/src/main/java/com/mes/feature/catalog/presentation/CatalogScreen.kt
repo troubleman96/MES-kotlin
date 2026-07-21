@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -94,6 +95,12 @@ fun CatalogScreen(
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
                             contentDescription = "Cart"
+                        )
+                    }
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Profile"
                         )
                     }
                 },

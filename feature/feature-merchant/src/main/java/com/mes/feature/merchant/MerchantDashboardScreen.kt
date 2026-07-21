@@ -49,7 +49,11 @@ import com.mes.core.designsystem.theme.MesColor
 @Composable
 fun MerchantDashboardScreen(
     onNotificationsClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onAddListingClick: () -> Unit,
+    onManageListingsClick: () -> Unit,
+    onViewOrdersClick: () -> Unit,
+    onOrderClick: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -82,7 +86,7 @@ fun MerchantDashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* Add new listing */ },
+                onClick = onAddListingClick,
                 containerColor = MesColor.AccentAmber
             ) {
                 Icon(Icons.Filled.Add, contentDescription = null)
@@ -125,11 +129,23 @@ fun MerchantDashboardScreen(
 
             // Pending orders
             item {
-                Text(
-                    text = "Incoming Orders",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Incoming Orders",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "See All",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MesColor.PrimaryTeal,
+                        modifier = Modifier.clickable { onViewOrdersClick() }
+                    )
+                }
             }
 
             items(demoOrders) { order ->
@@ -137,7 +153,8 @@ fun MerchantDashboardScreen(
                     orderNumber = order.first,
                     product = order.second,
                     customer = order.third,
-                    status = order.fourth
+                    status = order.fourth,
+                    onClick = { onOrderClick(order.first) }
                 )
             }
 
@@ -155,7 +172,7 @@ fun MerchantDashboardScreen(
                     icon = Icons.Filled.Inventory,
                     title = "Manage Listings",
                     subtitle = "Add, edit, or remove equipment",
-                    onClick = { /* navigate */ }
+                    onClick = onManageListingsClick
                 )
             }
 
@@ -164,7 +181,7 @@ fun MerchantDashboardScreen(
                     icon = Icons.Filled.Receipt,
                     title = "View All Orders",
                     subtitle = "See incoming and past orders",
-                    onClick = { /* navigate */ }
+                    onClick = onViewOrdersClick
                 )
             }
 
@@ -172,6 +189,7 @@ fun MerchantDashboardScreen(
         }
     }
 }
+
 
 @Composable
 private fun StatCard(
@@ -215,10 +233,13 @@ private fun OrderRequestCard(
     orderNumber: String,
     product: String,
     customer: String,
-    status: String
+    status: String,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

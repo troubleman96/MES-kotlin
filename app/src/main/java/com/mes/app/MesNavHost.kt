@@ -15,12 +15,16 @@ import com.mes.feature.cart.CartScreen
 import com.mes.feature.catalog.CatalogScreen
 import com.mes.feature.catalog.ProductDetailScreen
 import com.mes.feature.checkout.CheckoutScreen
+import com.mes.feature.merchant.AddListingScreen
+import com.mes.feature.merchant.ManageListingsScreen
 import com.mes.feature.merchant.MerchantDashboardScreen
 import com.mes.feature.notifications.NotificationsScreen
 import com.mes.feature.onboarding.OnboardingScreen
 import com.mes.feature.orders.OrderDetailScreen
 import com.mes.feature.orders.OrdersScreen
+import com.mes.feature.profile.AddressesScreen
 import com.mes.feature.profile.ProfileScreen
+import com.mes.feature.profile.SettingsScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
@@ -35,6 +39,10 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val PROFILE = "profile"
     const val MERCHANT_DASHBOARD = "merchant_dashboard"
+    const val MANAGE_LISTINGS = "manage_listings"
+    const val ADD_LISTING = "add_listing"
+    const val ADDRESSES = "addresses"
+    const val SETTINGS = "settings"
 }
 
 @Composable
@@ -164,6 +172,7 @@ fun MesNavHost() {
 
         composable(Routes.PROFILE) {
             ProfileScreen(
+                currentRole = currentUserRole ?: UserRole.BUYER,
                 onBackClick = { navController.popBackStack() },
                 onLogout = {
                     hasSeenOnboarding = false
@@ -171,14 +180,60 @@ fun MesNavHost() {
                     navController.navigate(Routes.ONBOARDING) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onSwitchRole = {
+                    currentUserRole = if (currentUserRole == UserRole.BUYER) UserRole.MERCHANT else UserRole.BUYER
+                    val nextRoute = if (currentUserRole == UserRole.BUYER) Routes.CATALOG else Routes.MERCHANT_DASHBOARD
+                    navController.navigate(nextRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToOrders = { navController.navigate(Routes.ORDERS) },
+                onNavigateToAddresses = { navController.navigate(Routes.ADDRESSES) },
+                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) }
+            )
+        }
+
+        composable(Routes.ADDRESSES) {
+            AddressesScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
         composable(Routes.MERCHANT_DASHBOARD) {
             MerchantDashboardScreen(
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
-                onProfileClick = { navController.navigate(Routes.PROFILE) }
+                onProfileClick = { navController.navigate(Routes.PROFILE) },
+                onAddListingClick = { navController.navigate(Routes.ADD_LISTING) },
+                onManageListingsClick = { navController.navigate(Routes.MANAGE_LISTINGS) },
+                onViewOrdersClick = { navController.navigate(Routes.ORDERS) },
+                onOrderClick = { orderId ->
+                    navController.navigate("order/$orderId")
+                }
+            )
+        }
+
+        composable(Routes.MANAGE_LISTINGS) {
+            ManageListingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAddListingClick = { navController.navigate(Routes.ADD_LISTING) },
+                onEditListingClick = { listingId ->
+                    // For now, reuse ADD_LISTING or create an EDIT route
+                    navController.navigate(Routes.ADD_LISTING)
+                }
+            )
+        }
+
+        composable(Routes.ADD_LISTING) {
+            AddListingScreen(
+                onBackClick = { navController.popBackStack() },
+                onListingAdded = { navController.popBackStack() }
             )
         }
     }
