@@ -54,7 +54,10 @@ class AuthViewModel @Inject constructor(
     private fun observeSession() {
         viewModelScope.launch {
             sessionDataStore.accessToken.collectLatest { token ->
-                _uiState.update { it.copy(isLoggedIn = !token.isNullOrBlank()) }
+                // Don't set isLoggedIn=true if we are still waiting for OTP verification
+                if (!_uiState.value.requiresOtp) {
+                    _uiState.update { it.copy(isLoggedIn = !token.isNullOrBlank()) }
+                }
             }
         }
     }
@@ -86,6 +89,16 @@ class AuthViewModel @Inject constructor(
                 )
             }) {
                 is ApiResult.Success -> {
+                    val response = result.data
+                    // SAVE SESSION IMMEDIATELY so verifyPhone can use it if required by backend
+                    val role = if (response.role?.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
+                    sessionDataStore.saveSession(
+                        accessToken = response.accessToken ?: "",
+                        refreshToken = response.refreshToken ?: "",
+                        userId = response.userId ?: "",
+                        role = role
+                    )
+
                     _uiState.update { it.copy(
                         isLoading = false, 
                         isRegistrationSuccess = true,
