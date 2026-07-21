@@ -5,6 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mes.core.datastore.SessionDataStore
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mes.feature.auth.AuthViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -52,14 +57,39 @@ object Routes {
 fun MesNavHost() {
     val navController = rememberNavController()
     var hasSeenOnboarding by remember { mutableStateOf(false) }
+    
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
+    
     var currentUserRole by remember { mutableStateOf<UserRole?>(null) }
-    var isLoggedIn by remember { mutableStateOf(false) } // This should ideally come from a ViewModel
+    var isLoggedIn by remember { mutableStateOf(false) }
 
+    LaunchedEffect(authUiState.isLoggedIn) {
+        isLoggedIn = authUiState.isLoggedIn
+        // If we want to stay logged in across restarts, we should read from SessionDataStore
+    }
+    
+    val sessionDataStore = com.mes.core.datastore.SessionDataStore(androidx.compose.ui.platform.LocalContext.current)
+    val sessionRole by sessionDataStore.userRole.collectAsStateWithLifecycle(initialValue = null)
+    
+    LaunchedEffect(sessionRole) {
+        if (sessionRole != null) {
+            currentUserRole = sessionRole
+            isLoggedIn = true
+        }
+    }
+    
     val startDestination = if (hasSeenOnboarding) {
-        Routes.MAIN
+        if (isLoggedIn) Routes.MAIN else {
+            // For buyers, we let them browse without login
+            if (currentUserRole == UserRole.BUYER) Routes.MAIN else Routes.LOGIN
+        }
     } else {
         Routes.ONBOARDING
     }
+
+    // We'll manage isLoggedIn state more carefully
+    // var isLoggedIn by remember { mutableStateOf(false) }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.ONBOARDING) {
@@ -91,12 +121,8 @@ fun MesNavHost() {
             LoginScreen(
                 onLoginSuccess = {
                     isLoggedIn = true
-                    if (navController.previousBackStackEntry?.destination?.route == Routes.ONBOARDING) {
-                        navController.navigate(Routes.MAIN) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                    } else {
-                        navController.popBackStack()
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onRegisterClick = { navController.navigate(Routes.REGISTER) }
