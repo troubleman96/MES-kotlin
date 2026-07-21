@@ -106,7 +106,9 @@ fun MainScreen(
             }
             composable(BottomNavItem.Sellers.route) {
                 SellersScreen(
-                    onSellerClick = { /* Navigate to seller details */ },
+                    onSellerClick = { sellerId ->
+                        rootNavController.navigate("seller/$sellerId")
+                    },
                     onNotificationsClick = {
                         rootNavController.navigate(Routes.NOTIFICATIONS)
                     },

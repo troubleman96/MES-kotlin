@@ -25,6 +25,7 @@ import com.mes.feature.orders.OrdersScreen
 import com.mes.feature.profile.AddressesScreen
 import com.mes.feature.profile.ProfileScreen
 import com.mes.feature.profile.SettingsScreen
+import com.mes.feature.catalog.presentation.SellerDetailScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
@@ -44,6 +45,7 @@ object Routes {
     const val ADD_LISTING = "add_listing"
     const val ADDRESSES = "addresses"
     const val SETTINGS = "settings"
+    const val SELLER_DETAIL = "seller/{sellerId}"
 }
 
 @Composable
@@ -227,6 +229,17 @@ fun MesNavHost() {
             AddListingScreen(
                 onBackClick = { navController.popBackStack() },
                 onListingAdded = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.SELLER_DETAIL) { backStackEntry ->
+            val sellerId = backStackEntry.arguments?.getString("sellerId") ?: return@composable
+            SellerDetailScreen(
+                sellerId = sellerId,
+                onBackClick = { navController.popBackStack() },
+                onProductClick = { productId ->
+                    navController.navigate("product/$productId")
+                }
             )
         }
     }
