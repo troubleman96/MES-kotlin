@@ -3,8 +3,7 @@ package com.mes.feature.merchant
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mes.core.domain.Order
-import com.mes.core.domain.Product
-import com.mes.core.network.CatalogApi
+import com.mes.core.domain.OrderStatus
 import com.mes.core.network.OrdersApi
 import com.mes.core.network.envelope.ApiResult
 import com.mes.core.network.envelope.safeApiCall
@@ -26,7 +25,6 @@ data class MerchantDashboardUiState(
 
 @HiltViewModel
 class MerchantDashboardViewModel @Inject constructor(
-    private val catalogApi: CatalogApi,
     private val ordersApi: OrdersApi
 ) : ViewModel() {
 
@@ -46,9 +44,9 @@ class MerchantDashboardViewModel @Inject constructor(
             when (ordersResult) {
                 is ApiResult.Success -> {
                     val orders = ordersResult.data
-                    val pendingOrders = orders.filter { it.status.lowercase() == "pending" || it.status.lowercase() == "confirmed" }
-                    val activeRentals = orders.count { it.status.lowercase() == "active" || it.status.lowercase() == "delivered" }
-                    val revenue = orders.filter { it.status.lowercase() != "cancelled" }.sumOf { it.totalAmountTzs }
+                    val pendingOrders = orders.filter { it.status == OrderStatus.CONFIRMED || it.status == OrderStatus.PENDING_PAYMENT }
+                    val activeRentals = orders.count { it.status == OrderStatus.DISPATCHED || it.status == OrderStatus.DELIVERED }
+                    val revenue = orders.filter { it.status != OrderStatus.CANCELLED }.sumOf { it.subtotalTzs }
 
                     _uiState.update { 
                         it.copy(

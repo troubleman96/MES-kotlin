@@ -2,54 +2,27 @@ package com.mes.feature.merchant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mes.core.designsystem.component.StatusChip
 import com.mes.core.designsystem.theme.MesColor
-
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.mes.feature.merchant.MerchantDashboardViewModel
-import androidx.compose.runtime.getValue
+import com.mes.core.domain.Order
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,10 +147,10 @@ fun MerchantDashboardScreen(
                 } else {
                     items(uiState.incomingOrders) { order ->
                         OrderRequestCard(
-                            orderNumber = order.orderNumber,
-                            product = order.items.firstOrNull()?.productName ?: "Multiple Items",
-                            customer = order.facilityName ?: "Customer",
-                            status = order.status,
+                            orderNumber = order.id,
+                            product = order.lines.firstOrNull()?.productName ?: "Equipment",
+                            customer = order.deliveryAddress?.facilityName ?: "Customer",
+                            status = order.status.name,
                             onClick = { onOrderClick(order.id) }
                         )
                     }
@@ -378,16 +351,3 @@ private fun QuickActionCard(
         }
     }
 }
-
-private data class OrderData(
-    val first: String,
-    val second: String,
-    val third: String,
-    val fourth: String
-)
-
-private val demoOrders = listOf(
-    OrderData("ORD-001", "Portable Ventilator Pro", "Muhimbili Hospital", "Pending"),
-    OrderData("ORD-002", "Patient Monitor 12-Lead", "Kilimanjaro Medical", "Pending"),
-    OrderData("ORD-003", "Infusion Pump Set", "Temeke Hospital", "Confirmed")
-)
