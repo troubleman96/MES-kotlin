@@ -131,6 +131,7 @@ fun MesNavHost() {
 
         composable(Routes.REGISTER) {
             RegisterScreen(
+                initialRole = currentUserRole ?: UserRole.BUYER,
                 onRegisterSuccess = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.REGISTER) { inclusive = true }
@@ -142,15 +143,25 @@ fun MesNavHost() {
 
         composable(Routes.PRODUCT_DETAIL) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: return@composable
+            val productDetailViewModel: com.mes.feature.catalog.presentation.ProductDetailViewModel = hiltViewModel()
+            
             ProductDetailScreen(
                 productId = productId,
                 onBackClick = { navController.popBackStack() },
-                onAddToCart = {
+                onAddToCart = { quantity, start, end ->
+                    if (isLoggedIn) {
+                        productDetailViewModel.addToCart(quantity, start, end)
+                    } else {
+                        navController.navigate(Routes.LOGIN)
+                    }
+                },
+                onNavigateToCart = {
                     navController.navigate(Routes.CART)
                 },
                 onMerchantClick = { sellerId: String ->
                     navController.navigate("seller/$sellerId")
-                }
+                },
+                viewModel = productDetailViewModel
             )
         }
 

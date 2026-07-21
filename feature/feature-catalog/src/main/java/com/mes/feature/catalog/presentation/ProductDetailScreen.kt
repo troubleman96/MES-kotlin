@@ -39,7 +39,8 @@ import com.mes.feature.catalog.presentation.ProductDetailViewModel
 fun ProductDetailScreen(
     productId: String,
     onBackClick: () -> Unit,
-    onAddToCart: () -> Unit,
+    onAddToCart: (Int, String, String) -> Unit,
+    onNavigateToCart: () -> Unit,
     onMerchantClick: (String) -> Unit,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
@@ -47,6 +48,13 @@ fun ProductDetailScreen(
 
     LaunchedEffect(productId) {
         viewModel.loadProduct(productId)
+    }
+
+    LaunchedEffect(uiState.addToCartSuccess) {
+        if (uiState.addToCartSuccess) {
+            viewModel.resetAddToCart()
+            onNavigateToCart()
+        }
     }
 
     val product = uiState.product
@@ -63,6 +71,21 @@ fun ProductDetailScreen(
             Text(text = uiState.error ?: "Product not found")
         }
         return
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.addToCartSuccess) {
+        if (uiState.addToCartSuccess) {
+            viewModel.resetAddToCart()
+        }
+    }
+    
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError() // I need to add this to ViewModel too
+        }
     }
 
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -143,7 +166,7 @@ fun ProductDetailScreen(
                     }
 
                     Button(
-                        onClick = onAddToCart,
+                        onClick = { onAddToCart(quantity, startDate.toString(), endDate.toString()) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MesColor.AccentAmber
                         ),

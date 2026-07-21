@@ -45,10 +45,17 @@ import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.UserRole
 import kotlinx.coroutines.flow.collectLatest
 
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.intl.Locale
+
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onLoginClick: () -> Unit,
+    initialRole: UserRole = UserRole.BUYER,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -58,6 +65,7 @@ fun RegisterScreen(
     var firstName by rememberSaveable { mutableStateOf("") }
     var lastName by rememberSaveable { mutableStateOf("") }
     var businessName by rememberSaveable { mutableStateOf("") }
+    var role by rememberSaveable { mutableStateOf(initialRole) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -101,7 +109,36 @@ fun RegisterScreen(
                 color = MesColor.Ink600
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Register as:",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Start)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                UserRole.entries.forEach { roleOption ->
+                    FilterChip(
+                        selected = role == roleOption,
+                        onClick = { role = roleOption },
+                        label = { Text(roleOption.name.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }) },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MesColor.PrimaryTealContainer,
+                            selectedLabelColor = MesColor.PrimaryTeal
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -175,7 +212,7 @@ fun RegisterScreen(
                         password = password,
                         firstName = firstName,
                         lastName = lastName,
-                        role = UserRole.BUYER,
+                        role = role,
                         businessName = businessName.ifBlank { null }
                     )
                 },

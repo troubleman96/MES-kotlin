@@ -86,6 +86,44 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    fun addToCart(product: com.mes.core.domain.Product, quantity: Int, rentalStart: String, rentalEnd: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            // Get current cart first
+            val currentCartResult = safeApiCall { cartApi.getCart() }
+            val lines = if (currentCartResult is ApiResult.Success) {
+                currentCartResult.data.lines.toMutableList()
+            } else {
+                mutableListOf()
+            }
+
+            // Check if already in cart
+            val existingIndex = lines.indexOfFirst { it.productId == product.id && it.rentalStart == rentalStart && it.rentalEnd == rentalEnd }
+            if (existingIndex != -1) {
+                val existing = lines[existingIndex]
+                lines[existingIndex] = existing.copy(quantity = existing.quantity + quantity)
+            } else {
+                lines.add(
+                    com.mes.core.domain.CartLine(
+                        id = "", // Backend generates ID
+                        productId = product.id,
+                        rentalStart = rentalStart,
+                        rentalEnd = rentalEnd,
+                        quantity = quantity,
+                        addedAt = kotlinx.datetime.Clock.System.now().toString(),
+                        productName = product.name,
+                        dailyRateTzs = product.dailyRateTzs,
+                        merchantName = product.merchantName,
+                        merchantId = product.merchant ?: "",
+                        thumbnailUrl = product.images.firstOrNull()?.url ?: ""
+                    )
+                )
+            }
+
+            syncCart(lines)
+        }
+    }
+
     private suspend fun syncCart(lines: List<com.mes.core.domain.CartLine>) {
         _uiState.update { it.copy(isLoading = true) }
         when (val result = safeApiCall { cartApi.syncCart(CartSyncRequest(lines = lines)) }) {
