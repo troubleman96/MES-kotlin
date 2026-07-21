@@ -169,9 +169,11 @@ fun ProductDetailScreen(
 
                     Button(
                         onClick = { 
-                            val handled = onAddToCart(quantity, startDate.toString(), endDate.toString())
-                            if (!handled) {
-                                showAuthPrompt = true
+                            if (onAddToCart(quantity, startDate.toString(), endDate.toString())) {
+                                // Handled (is logged in)
+                            } else {
+                                // Not handled (guest), go to login directly as requested
+                                onLoginClick()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(

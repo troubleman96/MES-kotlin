@@ -222,6 +222,7 @@ fun MesNavHost() {
 
         composable(Routes.PROFILE) {
             ProfileScreen(
+                isLoggedIn = isLoggedIn,
                 currentRole = currentUserRole ?: UserRole.BUYER,
                 onBackClick = { navController.popBackStack() },
                 onLogout = {
@@ -231,12 +232,8 @@ fun MesNavHost() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onSwitchRole = {
-                    currentUserRole = if (currentUserRole == UserRole.BUYER) UserRole.MERCHANT else UserRole.BUYER
-                    val nextRoute = if (currentUserRole == UserRole.BUYER) Routes.CATALOG else Routes.MERCHANT_DASHBOARD
-                    navController.navigate(nextRoute) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                onLoginClick = {
+                    navController.navigate(Routes.LOGIN)
                 },
                 onNavigateToOrders = { navController.navigate(Routes.ORDERS) },
                 onNavigateToAddresses = { navController.navigate(Routes.ADDRESSES) },

@@ -18,6 +18,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.UserRole
 import com.mes.feature.cart.CartScreen
@@ -173,15 +175,21 @@ fun MainScreen(
 
             // Shared Route
             composable(BottomNavItem.Profile.route) {
+                val authViewModel: com.mes.feature.auth.AuthViewModel = hiltViewModel()
+                val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
+                
                 ProfileScreen(
+                    isLoggedIn = authUiState.isLoggedIn,
                     currentRole = currentUserRole ?: UserRole.BUYER,
-                    onBackClick = { /* No back from main profile tab */ },
+                    onBackClick = {},
                     onLogout = {
                         rootNavController.navigate(Routes.ONBOARDING) {
                             popUpTo(0) { inclusive = true }
                         }
                     },
-                    onSwitchRole = {},
+                    onLoginClick = {
+                        rootNavController.navigate(Routes.LOGIN)
+                    },
                     onNavigateToOrders = { rootNavController.navigate(Routes.ORDERS) },
                     onNavigateToAddresses = { rootNavController.navigate(Routes.ADDRESSES) },
                     onNavigateToSettings = { rootNavController.navigate(Routes.SETTINGS) }
