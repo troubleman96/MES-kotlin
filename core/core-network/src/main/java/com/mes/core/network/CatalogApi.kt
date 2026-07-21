@@ -1,12 +1,13 @@
 package com.mes.core.network
 
 import com.mes.core.network.envelope.Envelope
+import kotlinx.serialization.SerialName
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface CatalogApi {
-    @GET("products")
+    @GET("products/")
     suspend fun getProducts(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 20,
@@ -14,30 +15,32 @@ interface CatalogApi {
         @Query("search") search: String? = null
     ): Envelope<com.mes.core.domain.ProductPage>
 
-    @GET("products/{id}")
+    @GET("products/{id}/")
     suspend fun getProduct(@Path("id") id: String): Envelope<com.mes.core.domain.Product>
 
-    @GET("products/{id}/availability")
+    @GET("products/{id}/availability/")
     suspend fun getProductAvailability(@Path("id") id: String): Envelope<AvailabilityResponse>
 
-    @GET("merchants")
+    @GET("merchants/")
     suspend fun getMerchants(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 50,
         @Query("search") search: String? = null
     ): Envelope<MerchantPage>
 
-    @GET("merchants/{id}")
+    @GET("merchants/{id}/")
     suspend fun getMerchant(@Path("id") id: String): Envelope<com.mes.core.domain.User>
 
-    @GET("merchants/me/products")
+    @GET("merchants/me/products/")
     suspend fun getMyProducts(): Envelope<List<com.mes.core.domain.Product>>
 }
 
 @kotlinx.serialization.Serializable
 data class MerchantPage(
     val items: List<com.mes.core.domain.User>,
-    @kotlinx.serialization.SerialName("count") val total: Int
+    val total: Int = 0,
+    @SerialName("count") val count: Int = 0,
+    @SerialName("counts") val counts: Int = 0
 )
 
 @kotlinx.serialization.Serializable

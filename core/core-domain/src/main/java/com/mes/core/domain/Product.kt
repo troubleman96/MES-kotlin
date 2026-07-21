@@ -3,13 +3,15 @@ package com.mes.core.domain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import kotlinx.serialization.json.JsonElement
+
 @Serializable
 data class Product(
     val id: String,
     val name: String,
-    val category: ProductCategory,
-    val description: String,
-    val specs: Map<String, String> = emptyMap(),
+    val category: ProductCategory = ProductCategory.DIAGNOSTIC,
+    val description: String = "",
+    val specs: Map<String, JsonElement> = emptyMap(),
     @SerialName("daily_rate_tzs") val dailyRateTzs: Long,
     @SerialName("is_featured") val isFeatured: Boolean = false,
     @SerialName("is_active") val isActive: Boolean = true,
@@ -41,5 +43,7 @@ enum class ProductCategory(val displayName: String) {
 @Serializable
 data class ProductPage(
     val items: List<Product>,
-    val total: Int
+    val total: Int = 0,
+    @SerialName("count") val count: Int = 0,
+    @SerialName("counts") val counts: Int = 0
 )

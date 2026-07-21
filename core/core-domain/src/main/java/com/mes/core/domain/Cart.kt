@@ -13,12 +13,11 @@ data class CartLine(
     @SerialName("rental_end") val rentalEnd: String,
     val quantity: Int = 1,
     @SerialName("added_at") val addedAt: String,
-    // Transient fields for UI, not from API
-    @Transient val productName: String = "",
-    @Transient val dailyRateTzs: Long = 0,
-    @Transient val merchantName: String = "",
-    @Transient val merchantId: String = "",
-    @Transient val thumbnailUrl: String = ""
+    @SerialName("product_name") val productName: String = "",
+    @SerialName("daily_rate_tzs") val dailyRateTzs: Long = 0,
+    @SerialName("merchant_name") val merchantName: String = "",
+    @SerialName("merchant_id") val merchantId: String = "",
+    @SerialName("thumbnail_url") val thumbnailUrl: String = ""
 ) {
     val numberOfDays: Int
         get() = try {

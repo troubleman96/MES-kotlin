@@ -24,4 +24,5 @@ android {
 dependencies {
     implementation(project(":core:core-domain"))
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.json)
 }

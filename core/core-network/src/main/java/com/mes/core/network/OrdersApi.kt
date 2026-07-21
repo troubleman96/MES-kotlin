@@ -7,27 +7,27 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.*
 
 interface OrdersApi {
-    @POST("checkout")
+    @POST("checkout/")
     suspend fun checkout(@Body request: CheckoutRequest): Envelope<CheckoutResponse>
 
-    @GET("orders")
+    @GET("orders/")
     suspend fun getOrders(
         @Query("status") status: String? = null
     ): Envelope<List<Order>>
 
-    @GET("orders/{id}")
+    @GET("orders/{id}/")
     suspend fun getOrder(@Path("id") id: String): Envelope<Order>
 
-    @PATCH("orders/{id}/status")
+    @PATCH("orders/{id}/status/")
     suspend fun updateOrderStatus(
         @Path("id") id: String,
         @Body request: StatusUpdateRequest
     ): Envelope<Order>
 
-    @POST("orders/{id}/pay")
+    @POST("orders/{id}/pay/")
     suspend fun initiatePayment(@Path("id") id: String): Envelope<PaymentIntentResponse>
 
-    @GET("orders/{id}/payment-status")
+    @GET("orders/{id}/payment-status/")
     suspend fun getPaymentStatus(@Path("id") id: String): Envelope<PaymentStatusResponse>
 }
 

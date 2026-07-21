@@ -8,19 +8,19 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface AuthApi {
-    @POST("auth/register")
+    @POST("auth/register/")
     suspend fun register(@Body request: RegisterRequest): Envelope<AuthResponse>
 
-    @POST("auth/login")
+    @POST("auth/login/")
     suspend fun login(@Body request: LoginRequest): Envelope<AuthResponse>
 
-    @POST("auth/verify-phone")
+    @POST("auth/verify-phone/")
     suspend fun verifyPhone(@Body request: OtpRequest): Envelope<AuthResponse>
 
-    @POST("auth/send-phone-otp")
+    @POST("auth/send-phone-otp/")
     suspend fun sendPhoneOtp(): Envelope<Unit>
 
-    @GET("auth/me")
+    @GET("auth/me/")
     suspend fun getProfile(): Envelope<com.mes.core.domain.User>
 }
 

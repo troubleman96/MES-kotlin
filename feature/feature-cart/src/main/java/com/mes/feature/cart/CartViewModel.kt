@@ -13,6 +13,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.mes.core.network.CartApi
+import com.mes.core.network.CartSyncRequest
+import com.mes.core.network.envelope.ApiResult
+import com.mes.core.network.envelope.safeApiCall
+
 data class CartUiState(
     val cart: Cart = Cart(),
     val isLoading: Boolean = false,
@@ -20,31 +25,43 @@ data class CartUiState(
 )
 
 @HiltViewModel
-class CartViewModel @Inject constructor() : ViewModel() {
+class CartViewModel @Inject constructor(
+    private val cartApi: CartApi
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CartUiState())
     val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
 
     init {
-        // Load demo cart for MVP
-        loadDemoCart()
+        loadCart()
     }
 
-    private fun loadDemoCart() {
-        val demoLines = listOf(
-            TestData.testCartLine(dailyRate = 50000),
-            TestData.testCartLine(dailyRate = 30000),
-            TestData.testCartLine(dailyRate = 75000)
-        )
-        _uiState.update { it.copy(cart = Cart(lines = demoLines)) }
+    fun loadCart() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val result = safeApiCall { cartApi.getCart() }) {
+                is ApiResult.Success -> {
+                    _uiState.update { 
+                        it.copy(
+                            cart = Cart(lines = result.data.lines),
+                            isLoading = false
+                        )
+                    }
+                }
+                is ApiResult.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                }
+                is ApiResult.NetworkError -> {
+                    _uiState.update { it.copy(isLoading = false, error = "Network error") }
+                }
+            }
+        }
     }
 
     fun removeLine(lineId: String) {
         viewModelScope.launch {
-            val currentLines = _uiState.value.cart.lines
-            _uiState.update {
-                it.copy(cart = Cart(lines = currentLines.filter { line -> line.id != lineId }))
-            }
+            val currentLines = _uiState.value.cart.lines.filter { it.id != lineId }
+            syncCart(currentLines)
         }
     }
 
@@ -56,7 +73,7 @@ class CartViewModel @Inject constructor() : ViewModel() {
                     rentalEnd = period.endDate.toString()
                 ) else line
             }
-            _uiState.update { it.copy(cart = Cart(lines = currentLines)) }
+            syncCart(currentLines)
         }
     }
 
@@ -65,7 +82,27 @@ class CartViewModel @Inject constructor() : ViewModel() {
             val currentLines = _uiState.value.cart.lines.map { line ->
                 if (line.id == lineId) line.copy(quantity = maxOf(1, quantity)) else line
             }
-            _uiState.update { it.copy(cart = Cart(lines = currentLines)) }
+            syncCart(currentLines)
+        }
+    }
+
+    private suspend fun syncCart(lines: List<com.mes.core.domain.CartLine>) {
+        _uiState.update { it.copy(isLoading = true) }
+        when (val result = safeApiCall { cartApi.syncCart(CartSyncRequest(lines = lines)) }) {
+            is ApiResult.Success -> {
+                _uiState.update { 
+                    it.copy(
+                        cart = Cart(lines = result.data.cart.lines),
+                        isLoading = false
+                    )
+                }
+            }
+            is ApiResult.Failure -> {
+                _uiState.update { it.copy(isLoading = false, error = result.message) }
+            }
+            is ApiResult.NetworkError -> {
+                _uiState.update { it.copy(isLoading = false, error = "Network error") }
+            }
         }
     }
 

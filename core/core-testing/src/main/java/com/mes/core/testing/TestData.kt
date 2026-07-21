@@ -11,6 +11,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.JsonPrimitive
 import java.util.UUID
 
 object TestData {
@@ -30,10 +31,10 @@ object TestData {
         dailyRateTzs = dailyRate,
         images = listOf(ProductImage(UUID.randomUUID().toString(), "https://via.placeholder.com/400")),
         specs = mapOf(
-            "Model" to "VentPro 3000",
-            "Manufacturer" to "MedTech Corp",
-            "Weight" to "5.2 kg",
-            "Power" to "AC 100-240V"
+            "Model" to JsonPrimitive("VentPro 3000"),
+            "Manufacturer" to JsonPrimitive("MedTech Corp"),
+            "Weight" to JsonPrimitive("5.2 kg"),
+            "Power" to JsonPrimitive("AC 100-240V")
         ),
         isFeatured = true,
         isActive = true

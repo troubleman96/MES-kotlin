@@ -3,6 +3,7 @@ package com.mes.core.domain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Serializable
 enum class UserRole {
     @SerialName("buyer") BUYER,
     @SerialName("merchant") MERCHANT

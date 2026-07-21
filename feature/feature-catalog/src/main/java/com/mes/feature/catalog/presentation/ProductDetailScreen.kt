@@ -27,6 +27,7 @@ import com.mes.core.designsystem.theme.MesColor
 import com.mes.core.domain.Product
 import com.mes.core.domain.ProductImage
 import kotlinx.datetime.*
+import kotlinx.serialization.json.JsonPrimitive
 
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -340,8 +341,9 @@ fun ProductDetailScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MesColor.Ink600
                             )
+                            val displayValue = if (value is JsonPrimitive) value.content else value.toString()
                             Text(
-                                text = value,
+                                text = displayValue,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
