@@ -12,8 +12,8 @@ import com.mes.core.domain.UserRole
 import com.mes.feature.auth.LoginScreen
 import com.mes.feature.auth.RegisterScreen
 import com.mes.feature.cart.CartScreen
-import com.mes.feature.catalog.CatalogScreen
 import com.mes.feature.catalog.ProductDetailScreen
+import com.mes.feature.catalog.presentation.SellerDetailScreen
 import com.mes.feature.checkout.CheckoutScreen
 import com.mes.feature.merchant.AddListingScreen
 import com.mes.feature.merchant.ManageListingsScreen
@@ -67,8 +67,14 @@ fun MesNavHost() {
                 onFinished = { role ->
                     hasSeenOnboarding = true
                     currentUserRole = role
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    if (role == UserRole.MERCHANT) {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.MAIN) {
+                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -85,7 +91,13 @@ fun MesNavHost() {
             LoginScreen(
                 onLoginSuccess = {
                     isLoggedIn = true
-                    navController.popBackStack()
+                    if (navController.previousBackStackEntry?.destination?.route == Routes.ONBOARDING) {
+                        navController.navigate(Routes.MAIN) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    } else {
+                        navController.popBackStack()
+                    }
                 },
                 onRegisterClick = { navController.navigate(Routes.REGISTER) }
             )
@@ -102,30 +114,33 @@ fun MesNavHost() {
             )
         }
 
-        composable(Routes.CATALOG) {
-            CatalogScreen(
-                onProductClick = { productId ->
-                    navController.navigate("product/$productId")
-                },
-                onCartClick = { navController.navigate(Routes.CART) },
-                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
-                onProfileClick = { navController.navigate(Routes.PROFILE) }
-            )
-        }
-
         composable(Routes.PRODUCT_DETAIL) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: return@composable
             ProductDetailScreen(
                 productId = productId,
                 onBackClick = { navController.popBackStack() },
-                onAddToCart = { navController.navigate(Routes.CART) },
-                onMerchantClick = { /* open merchant profile sheet */ }
+                onAddToCart = { 
+                    if (isLoggedIn) {
+                        navController.navigate(Routes.CART)
+                    } else {
+                        navController.navigate(Routes.LOGIN)
+                    }
+                },
+                onMerchantClick = { sellerId: String ->
+                    navController.navigate("seller/$sellerId")
+                }
             )
         }
 
         composable(Routes.CART) {
             CartScreen(
-                onCheckout = { navController.navigate(Routes.CHECKOUT) },
+                onCheckout = { 
+                    if (isLoggedIn) {
+                        navController.navigate(Routes.CHECKOUT)
+                    } else {
+                        navController.navigate(Routes.LOGIN)
+                    }
+                },
                 onContinueShopping = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )

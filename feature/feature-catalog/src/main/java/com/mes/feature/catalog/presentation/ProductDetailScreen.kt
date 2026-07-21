@@ -34,7 +34,7 @@ fun ProductDetailScreen(
     productId: String,
     onBackClick: () -> Unit,
     onAddToCart: () -> Unit,
-    onMerchantClick: () -> Unit
+    onMerchantClick: (String) -> Unit
 ) {
     // In a real app, we'd fetch from API using productId
     val product = remember {
@@ -144,10 +144,7 @@ fun ProductDetailScreen(
                     }
 
                     Button(
-                        onClick = {
-                            // Check if logged in - for now show prompt
-                            showAuthPrompt = true
-                        },
+                        onClick = onAddToCart,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MesColor.AccentAmber
                         ),
@@ -214,7 +211,9 @@ fun ProductDetailScreen(
                     MerchantTrustCard(
                         merchantName = product.merchantName,
                         isVerified = product.merchantIsVerified,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().clickable { 
+                            onMerchantClick(product.merchant ?: "") 
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

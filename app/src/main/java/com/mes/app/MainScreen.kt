@@ -28,11 +28,21 @@ import com.mes.feature.profile.ProfileScreen
 import androidx.compose.ui.unit.dp
 import com.mes.app.Routes
 
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Receipt
+
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
+    // Buyer items
     object Home : BottomNavItem(Routes.CATALOG, Icons.Filled.Home, "Home")
     object Sellers : BottomNavItem("sellers_tab", Icons.Filled.Storefront, "Sellers")
     object Cart : BottomNavItem(Routes.CART, Icons.Filled.ShoppingCart, "Cart")
     object Profile : BottomNavItem(Routes.PROFILE, Icons.Filled.Person, "Profile")
+
+    // Merchant items
+    object MerchantDashboard : BottomNavItem(Routes.MERCHANT_DASHBOARD, Icons.Filled.Dashboard, "Home")
+    object MerchantOrders : BottomNavItem("merchant_orders_tab", Icons.Filled.Receipt, "Orders")
+    object MerchantListings : BottomNavItem(Routes.MANAGE_LISTINGS, Icons.Filled.ListAlt, "Listings")
 }
 
 @Composable
@@ -41,12 +51,21 @@ fun MainScreen(
     currentUserRole: UserRole?
 ) {
     val navController = rememberNavController()
-    val items = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Sellers,
-        BottomNavItem.Cart,
-        BottomNavItem.Profile
-    )
+    val items = if (currentUserRole == UserRole.MERCHANT) {
+        listOf(
+            BottomNavItem.MerchantDashboard,
+            BottomNavItem.MerchantOrders,
+            BottomNavItem.MerchantListings,
+            BottomNavItem.Profile
+        )
+    } else {
+        listOf(
+            BottomNavItem.Home,
+            BottomNavItem.Sellers,
+            BottomNavItem.Cart,
+            BottomNavItem.Profile
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -82,9 +101,10 @@ fun MainScreen(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = BottomNavItem.Home.route,
+            startDestination = items.first().route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // Buyer Routes
             composable(BottomNavItem.Home.route) {
                 CatalogScreen(
                     onProductClick = { productId ->
@@ -128,6 +148,33 @@ fun MainScreen(
                     }
                 )
             }
+
+            // Merchant Routes
+            composable(BottomNavItem.MerchantDashboard.route) {
+                com.mes.feature.merchant.MerchantDashboardScreen(
+                    onNotificationsClick = { rootNavController.navigate(Routes.NOTIFICATIONS) },
+                    onProfileClick = { navController.navigate(BottomNavItem.Profile.route) },
+                    onAddListingClick = { rootNavController.navigate(Routes.ADD_LISTING) },
+                    onManageListingsClick = { navController.navigate(BottomNavItem.MerchantListings.route) },
+                    onViewOrdersClick = { navController.navigate(BottomNavItem.MerchantOrders.route) },
+                    onOrderClick = { orderId -> rootNavController.navigate("order/$orderId") }
+                )
+            }
+            composable(BottomNavItem.MerchantOrders.route) {
+                com.mes.feature.orders.OrdersScreen(
+                    onOrderClick = { orderId -> rootNavController.navigate("order/$orderId") },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(BottomNavItem.MerchantListings.route) {
+                com.mes.feature.merchant.ManageListingsScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onAddListingClick = { rootNavController.navigate(Routes.ADD_LISTING) },
+                    onEditListingClick = { rootNavController.navigate(Routes.ADD_LISTING) }
+                )
+            }
+
+            // Shared Route
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(
                     currentRole = currentUserRole ?: UserRole.BUYER,
@@ -137,9 +184,7 @@ fun MainScreen(
                             popUpTo(0) { inclusive = true }
                         }
                     },
-                    onSwitchRole = {
-                        // This might need handling at root level
-                    },
+                    onSwitchRole = {},
                     onNavigateToOrders = { rootNavController.navigate(Routes.ORDERS) },
                     onNavigateToAddresses = { rootNavController.navigate(Routes.ADDRESSES) },
                     onNavigateToSettings = { rootNavController.navigate(Routes.SETTINGS) }

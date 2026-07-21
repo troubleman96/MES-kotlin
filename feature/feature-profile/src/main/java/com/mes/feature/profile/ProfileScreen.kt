@@ -121,27 +121,12 @@ fun ProfileScreen(
                                 color = MesColor.Ink600
                             )
                             Spacer(modifier = Modifier.height(4.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (currentRole == UserRole.BUYER) "Buyer" else "Merchant",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MesColor.PrimaryTeal
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "•",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MesColor.Ink400
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (currentRole == UserRole.BUYER) "Switch to Merchant" else "Switch to Buyer",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MesColor.PrimaryTeal,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clickable { onSwitchRole() }
-                                )
-                            }
+                            Text(
+                                text = if (currentRole == UserRole.BUYER) "Buyer Account" else "Merchant Account",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MesColor.PrimaryTeal,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
