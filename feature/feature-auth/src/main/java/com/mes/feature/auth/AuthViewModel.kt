@@ -10,9 +10,12 @@ import com.mes.core.network.RegisterRequest
 import com.mes.core.network.envelope.ApiResult
 import com.mes.core.network.envelope.safeApiCall
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,8 +23,14 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isRegistrationSuccess: Boolean = false,
-    val requiresOtp: Boolean = false
+    val requiresOtp: Boolean = false,
+    val isLoggedIn: Boolean = false
 )
+
+sealed interface AuthEvent {
+    data object LoginSuccess : AuthEvent
+    data object RegistrationSuccess : AuthEvent
+}
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -31,6 +40,9 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<AuthEvent>()
+    val events = _events.receiveAsFlow()
 
     fun register(
         email: String,
@@ -43,7 +55,7 @@ class AuthViewModel @Inject constructor(
         facilityName: String? = null
     ) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = safeApiCall {
                 authApi.register(
                     RegisterRequest(
@@ -59,22 +71,16 @@ class AuthViewModel @Inject constructor(
                 )
             }) {
                 is ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isRegistrationSuccess = true
-                    )
+                    _uiState.update { it.copy(isLoading = false, isRegistrationSuccess = true) }
+                    _events.send(AuthEvent.RegistrationSuccess)
                 }
                 is ApiResult.Failure -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = result.message
-                    )
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
                 is ApiResult.NetworkError -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Network error. Please check your connection."
-                    )
+                    _uiState.update {
+                        it.copy(isLoading = false, error = "Network error. Please check your connection.")
+                    }
                 }
             }
         }
@@ -82,17 +88,14 @@ class AuthViewModel @Inject constructor(
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = safeApiCall {
                 authApi.login(LoginRequest(email = email, password = password))
             }) {
                 is ApiResult.Success -> {
                     val response = result.data
                     if (!response.phoneVerified) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            requiresOtp = true
-                        )
+                        _uiState.update { it.copy(isLoading = false, requiresOtp = true) }
                     } else {
                         val role = if (response.role.lowercase() == "merchant") UserRole.MERCHANT else UserRole.BUYER
                         sessionDataStore.saveSession(
@@ -101,20 +104,17 @@ class AuthViewModel @Inject constructor(
                             userId = response.userId ?: "",
                             role = role
                         )
-                        _uiState.value = _uiState.value.copy(isLoading = false)
+                        _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                        _events.send(AuthEvent.LoginSuccess)
                     }
                 }
                 is ApiResult.Failure -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = result.message
-                    )
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
                 is ApiResult.NetworkError -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Network error. Please check your connection."
-                    )
+                    _uiState.update {
+                        it.copy(isLoading = false, error = "Network error. Please check your connection.")
+                    }
                 }
             }
         }
@@ -122,7 +122,7 @@ class AuthViewModel @Inject constructor(
 
     fun verifyOtp(phone: String, otp: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = safeApiCall {
                 authApi.verifyPhone(
                     com.mes.core.network.OtpRequest(phone = phone, otp = otp)
@@ -137,25 +137,22 @@ class AuthViewModel @Inject constructor(
                         userId = response.userId ?: "",
                         role = role
                     )
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                    _events.send(AuthEvent.LoginSuccess)
                 }
                 is ApiResult.Failure -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = result.message
-                    )
+                    _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
                 is ApiResult.NetworkError -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Network error. Please check your connection."
-                    )
+                    _uiState.update {
+                        it.copy(isLoading = false, error = "Network error. Please check your connection.")
+                    }
                 }
             }
         }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        _uiState.update { it.copy(error = null) }
     }
 }

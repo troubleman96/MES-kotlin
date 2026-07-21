@@ -110,9 +110,6 @@ fun MainScreen(
                     onProductClick = { productId ->
                         rootNavController.navigate("product/$productId")
                     },
-                    onCartClick = {
-                        navController.navigate(BottomNavItem.Cart.route)
-                    },
                     onNotificationsClick = {
                         rootNavController.navigate(Routes.NOTIFICATIONS)
                     },
