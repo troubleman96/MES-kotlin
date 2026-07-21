@@ -14,6 +14,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mes.core.designsystem.theme.MesColor
 
+import androidx.compose.material.icons.filled.ArrowDropDown
+import com.mes.core.domain.ProductCategory
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddListingScreen(
@@ -24,7 +27,8 @@ fun AddListingScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     var name by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf(ProductCategory.DIAGNOSTIC) }
+    var categoryExpanded by remember { mutableStateOf(false) }
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var stock by remember { mutableStateOf("1") }
@@ -73,12 +77,35 @@ fun AddListingScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = { Text("Category") },
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                OutlinedTextField(
+                    value = selectedCategory.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Category") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    ProductCategory.entries.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.displayName) },
+                            onClick = {
+                                selectedCategory = category
+                                categoryExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 OutlinedTextField(
@@ -109,7 +136,7 @@ fun AddListingScreen(
                 onClick = {
                     viewModel.addListing(
                         name = name,
-                        category = category,
+                        category = selectedCategory.name,
                         priceTzs = price.toLongOrNull() ?: 0L,
                         stock = stock.toIntOrNull() ?: 1,
                         description = description
@@ -117,7 +144,7 @@ fun AddListingScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MesColor.PrimaryTeal),
-                enabled = !uiState.isLoading && name.isNotBlank() && price.isNotBlank() && category.isNotBlank()
+                enabled = !uiState.isLoading && name.isNotBlank() && price.isNotBlank()
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(color = MesColor.Surface0, modifier = Modifier.size(24.dp))

@@ -146,6 +146,7 @@ fun CheckoutScreen(
                     )
                     CheckoutStep.PAYMENT -> PaymentStep(
                         phone = uiState.paymentPhone,
+                        onPhoneChange = viewModel::updatePaymentPhone,
                         network = uiState.paymentNetwork,
                         total = uiState.cart.grandTotalTzs,
                         isProcessing = uiState.isProcessingPayment,
@@ -411,6 +412,7 @@ private fun CartLineItem(line: CartLine) {
 @Composable
 private fun PaymentStep(
     phone: String,
+    onPhoneChange: (String) -> Unit,
     network: String,
     total: Long,
     isProcessing: Boolean,
@@ -424,6 +426,7 @@ private fun PaymentStep(
         verticalArrangement = Arrangement.Center
     ) {
         if (isProcessing) {
+            // ... (keep processing UI)
             CircularProgressIndicator(
                 modifier = Modifier.size(64.dp),
                 color = MesColor.PrimaryTeal
@@ -481,6 +484,20 @@ private fun PaymentStep(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            OutlinedTextField(
+                value = phone,
+                onValueChange = onPhoneChange,
+                label = { Text("Payment Phone Number") },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("+255...") },
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
@@ -490,13 +507,7 @@ private fun PaymentStep(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = phone,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = network,
+                        text = "Network: $network",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MesColor.Ink400
                     )
@@ -504,6 +515,7 @@ private fun PaymentStep(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            // ... (keep rest of the UI)
 
             Text(
                 text = "Amount to pay",

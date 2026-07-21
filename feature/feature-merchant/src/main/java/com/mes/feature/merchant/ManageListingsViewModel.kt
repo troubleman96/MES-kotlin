@@ -38,7 +38,7 @@ class ManageListingsViewModel @Inject constructor(
             // Using getMyProducts endpoint from CatalogApi
             when (val result = safeApiCall { catalogApi.getMyProducts() }) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(products = result.data, isLoading = false) }
+                    _uiState.update { it.copy(products = result.data.items, isLoading = false) }
                 }
                 is ApiResult.Failure -> {
                     _uiState.update { it.copy(isLoading = false, error = result.message) }

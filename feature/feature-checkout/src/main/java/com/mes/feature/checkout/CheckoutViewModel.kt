@@ -119,6 +119,10 @@ class CheckoutViewModel @Inject constructor(
         _uiState.update { it.copy(selectedAddressId = addressId) }
     }
 
+    fun updatePaymentPhone(phone: String) {
+        _uiState.update { it.copy(paymentPhone = phone) }
+    }
+
     fun processPayment() {
         val addressId = _uiState.value.selectedAddressId ?: return
         

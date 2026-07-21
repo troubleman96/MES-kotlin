@@ -44,7 +44,7 @@ class SellerDetailViewModel @Inject constructor(
                         catalogApi.getMerchantProducts(sellerId)
                     }
                     val merchantProducts = if (productsResult is ApiResult.Success) {
-                        productsResult.data
+                        productsResult.data.items
                     } else emptyList()
 
                     _uiState.update {

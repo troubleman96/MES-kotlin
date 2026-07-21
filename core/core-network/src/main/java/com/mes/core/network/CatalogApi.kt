@@ -30,10 +30,10 @@ interface CatalogApi {
     suspend fun getMerchant(@Path("id") id: String): Envelope<com.mes.core.domain.User>
 
     @GET("merchants/me/products/")
-    suspend fun getMyProducts(): Envelope<List<com.mes.core.domain.Product>>
+    suspend fun getMyProducts(): Envelope<com.mes.core.domain.ProductPage>
 
     @GET("merchants/{id}/products/")
-    suspend fun getMerchantProducts(@Path("id") id: String): Envelope<List<com.mes.core.domain.Product>>
+    suspend fun getMerchantProducts(@Path("id") id: String): Envelope<com.mes.core.domain.ProductPage>
 
     @POST("products/")
     suspend fun createProduct(@Body request: CreateProductRequest): Envelope<com.mes.core.domain.Product>

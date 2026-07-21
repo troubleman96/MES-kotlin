@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -51,16 +52,14 @@ fun ProfileScreen(
             TopAppBar(
                 title = { Text("Profile") },
                 navigationIcon = {
-                    if (onBackClick != {}) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        if (uiState.isLoading && isLoggedIn) {
+        if (uiState.isLoading && isLoggedIn && uiState.user == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MesColor.PrimaryTeal)
             }
@@ -95,9 +94,9 @@ fun ProfileScreen(
                                     .background(if (isLoggedIn) MesColor.PrimaryTeal else MesColor.Ink300),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (isLoggedIn) {
+                                if (isLoggedIn && user != null) {
                                     Text(
-                                        text = user?.let { (it.firstName.take(1) + it.lastName.take(1)).uppercase() } ?: "??",
+                                        text = (user.firstName.take(1) + user.lastName.take(1)).uppercase(),
                                         style = MaterialTheme.typography.headlineSmall,
                                         color = MesColor.Surface0,
                                         fontWeight = FontWeight.Bold
@@ -116,18 +115,18 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 if (isLoggedIn) {
-                                    user?.facilityName?.let {
+                                    user?.email?.let {
                                         Text(
                                             text = it,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MesColor.Ink600
                                         )
                                     }
-                                    user?.businessName?.let {
+                                    user?.phone?.let {
                                         Text(
                                             text = it,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MesColor.Ink600
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MesColor.Ink400
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -166,20 +165,13 @@ fun ProfileScreen(
                         ) {
                             Column {
                                 ProfileMenuItem(
-                                    icon = Icons.Filled.Phone,
-                                    title = "Phone Number",
-                                    subtitle = user?.phone ?: "Not verified",
-                                    onClick = onNavigateToSettings
-                                )
-                                HorizontalDivider()
-                                ProfileMenuItem(
                                     icon = Icons.Filled.Receipt,
                                     title = "Order History",
                                     subtitle = "View all past orders",
                                     onClick = onNavigateToOrders
                                 )
                                 if (currentRole == UserRole.BUYER) {
-                                    HorizontalDivider()
+                                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                                     ProfileMenuItem(
                                         icon = Icons.Filled.LocationOn,
                                         title = "Delivery Addresses",
@@ -187,6 +179,13 @@ fun ProfileScreen(
                                         onClick = onNavigateToAddresses
                                     )
                                 }
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                                ProfileMenuItem(
+                                    icon = Icons.Filled.Settings,
+                                    title = "Settings",
+                                    subtitle = "Notifications and account security",
+                                    onClick = onNavigateToSettings
+                                )
                             }
                         }
                     }
@@ -196,7 +195,7 @@ fun ProfileScreen(
                 item {
                     val containerColor = if (isLoggedIn) MesColor.DangerLight else MesColor.PrimaryTealContainer
                     val contentColor = if (isLoggedIn) MesColor.Danger else MesColor.PrimaryTeal
-                    val icon = if (isLoggedIn) Icons.AutoMirrored.Filled.Logout else Icons.Filled.Login
+                    val icon = if (isLoggedIn) Icons.AutoMirrored.Filled.Logout else Icons.AutoMirrored.Filled.Login
                     val label = if (isLoggedIn) "Logout" else "Sign In / Register"
 
                     Card(
